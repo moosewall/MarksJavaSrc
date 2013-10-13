@@ -11,4 +11,12 @@
 public class MailUtils 
 {
 
+	public static void test1 ()
+	{
+		String sFN = TraceUtils.sGetFN() ;
+		
+		AppLog.Log(sFN + " entered");
+		
+		AppLog.Log(sFN + " exited");
+	}
 }
