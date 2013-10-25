@@ -4,6 +4,43 @@ import java.io.*;
 
 public class JavaTests 
 {
+	public static void main(String[] args) throws Exception 
+	{
+		//HelloWorld () ;
+		
+		/*
+		//TraceUtils.test1 () ;
+		FileUtils.test1();  
+		//TraceUtils.TestStackTrace () ;
+		 
+		 */
+		
+		AppState.initAppDetails(JavaTests.class); //call this before anything!
+		
+		String sFN = TraceUtils.sGetFN () ;
+		AppLog.Log(sFN + " initialized");
+		
+		// TODO Auto-generated method stub
+
+		//StdioLogger.Log("test");
+	
+		/*
+		MarksTestJava1_AppSettings settings = new MarksTestJava1_AppSettings () ;
+		settings.ReadSettingsFromIni();
+		settings.WriteSettingsToIni();  //write back so a stub .ini exists
+		
+		settings.CheckMe();
+		
+		JavaTests.StringTests();
+		JavaTests.CollectionTests();
+		
+		CryptUtils.test1();
+		*/
+		JavaTests.FileTests();
+		
+		AppLog.Log(sFN + " exited");
+	}
+	
 	static void Trc (String sTrc)
 	{
 		TraceUtils.Trc(sTrc);
@@ -89,7 +126,10 @@ public class JavaTests
 	{
 		String sFN = TraceUtils.sGetFN () ;
 		Log (sFN + "entered") ;
+		
+		String sLog = "" ;
 
+		/*
 		String sWorkDir = AppState.m_AppDetails.m_sMainClassDir ;
 		
 		String sFileName1 = String.format("%s%s", 
@@ -100,7 +140,20 @@ public class JavaTests
 		
 		FileUtils.bDumpStrIntoFile (sFileName1, sOutImage) ;
 		String sInImage = FileUtils.sDumpFileIntoStr(sFileName1) ;
+		*/
+		
+		Log (sFN + " todo, test getting file list") ;
 		
 		
+		String sFileMask = "c:\\tmp\\*.*" ;
+		File f = new File(sFileMask);
+		String sPath = f.getPath() ;  //this will be original path with mask
+		String sDir = f.getParent() ; //this is the directory
+		String sName = f.getName() ; //this is the file name, or wildcard
+		
+		//Finding files in java
+		//http://docs.oracle.com/javase/tutorial/essential/io/find.html
+		
+		sLog = "This many files found " + f.list().length ;
 	}
 }

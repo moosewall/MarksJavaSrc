@@ -20,7 +20,7 @@ public class MarksTestJava1_MainConsole {
 
 		//StdioLogger.Log("test");
 	
-		
+		/*
 		MarksTestJava1_AppSettings settings = new MarksTestJava1_AppSettings () ;
 		settings.ReadSettingsFromIni();
 		settings.WriteSettingsToIni();  //write back so a stub .ini exists
@@ -29,9 +29,10 @@ public class MarksTestJava1_MainConsole {
 		
 		JavaTests.StringTests();
 		JavaTests.CollectionTests();
-		JavaTests.FileTests();
 		
 		CryptUtils.test1();
+		*/
+		JavaTests.FileTests();
 		
 		AppLog.Log(sFN + " exited");
 	}

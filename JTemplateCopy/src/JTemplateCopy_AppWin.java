@@ -15,6 +15,7 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 
 import javax.swing.DefaultListModel;
+import javax.swing.JScrollBar;
 import javax.swing.JTextField;
 import javax.swing.JTextArea;
 import javax.swing.JMenu;
@@ -23,7 +24,6 @@ import javax.swing.JMenuItem;
 import javax.swing.UIManager;
 import javax.swing.JScrollPane;
 
-import java.awt.List;
 
 import javax.swing.JPanel;
 import javax.swing.ScrollPaneConstants;
@@ -34,13 +34,16 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.awt.TextField;
 
 import javax.swing.JToolBar;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.SwingConstants;
+
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
@@ -48,15 +51,25 @@ public class JTemplateCopy_AppWin
 {
 	
 	public JTemplateCopy_AppSettings m_AppSettings = new JTemplateCopy_AppSettings () ;
-	
+
+	/*
 	//http://www.seasite.niu.edu/cs580java/JList_Basics.htm
 	//http://docs.oracle.com/javase/7/docs/api/javax/swing/DefaultListModel.html
 	//
 	private DefaultListModel m_listModel;
 	private int m_ilistModelMax = 500 ;
 
+	*/
+	//http://www.seasite.niu.edu/cs580java/JList_Basics.htm
+	//http://docs.oracle.com/javase/7/docs/api/javax/swing/DefaultListModel.html
+	//
+	private DefaultListModel m_listModel;
+	private int m_ilistModelMax = 500 ;
+	private JList m_list = null ;
+	private JScrollPane m_scrollPane = null ;
 	private JLabel m_lblStatus = null ;
 	private String m_sStatusDefault = "Ready" ;
+	
 
 	private JFrame m_Frame;
 
@@ -115,9 +128,7 @@ public class JTemplateCopy_AppWin
 			@Override
 			public void windowClosing(WindowEvent arg0) 
 			{
-				String sFN = TraceUtils.sGetFN() ;
-				AppLog.Log(sFN + " exiting");
-				m_AppSettings.WriteSettingsToIni();  //write back so a stub .ini exists
+				m_cs.ShutdownWinApp();
 			}
 		});
 		m_Frame.setTitle("JTemplateCopy");
@@ -134,8 +145,7 @@ public class JTemplateCopy_AppWin
 		mntmExit.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) 
 			{
-
-				Close () ;
+				m_cs.Close(); 
 			}
 		});
 		mnFile.add(mntmExit);
@@ -146,7 +156,7 @@ public class JTemplateCopy_AppWin
 		mntmCloneGenericProject.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) 
 			{
-				m_EventHandlers.HandleGenericProjectClone();				
+				m_cs.Do_GenericProjectClone();
 			}
 		});
 		mnCommands.add(mntmCloneGenericProject);
@@ -157,7 +167,8 @@ public class JTemplateCopy_AppWin
 		mntmAbout.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) 
 			{
-				m_EventHandlers.HandleAbout();
+				//m_EventHandlers.HandleAbout();
+				m_cs.Do_About(); 
 			}
 		});
 		mnHelp.add(mntmAbout);
@@ -182,7 +193,7 @@ public class JTemplateCopy_AppWin
 		btnGenericSourceProjectClone.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) 
 			{
-				m_EventHandlers.HandleGenericProjectClone();
+				m_cs.Do_GenericProjectClone();
 			}
 		});
 		toolBar_Top.add(btnGenericSourceProjectClone);
@@ -191,7 +202,7 @@ public class JTemplateCopy_AppWin
 		btnAbout.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) 
 			{
-				m_EventHandlers.HandleAbout(); 
+				m_cs.Do_About();  
 			}
 		});
 		toolBar_Top.add(btnAbout);
@@ -199,13 +210,32 @@ public class JTemplateCopy_AppWin
 		JToolBar toolBar_Bottom = new JToolBar();
 		m_Frame.getContentPane().add(toolBar_Bottom, BorderLayout.SOUTH);
 		
+		//Per this
+		//http://www.seasite.niu.edu/cs580java/JList_Basics.htm
+		//Create an external "model" object that contains the data
+		//for the list.
+		m_listModel = new DefaultListModel () ;
+		
+		
+		m_list = new JList();
+		//contentPane.add(list, BorderLayout.CENTER);
+		m_list.setModel(m_listModel);
+
+		//construct a scrolling pane with the list.
+		m_scrollPane = new JScrollPane(m_list);
+		m_scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+		m_scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
+		m_Frame.getContentPane().add(m_scrollPane, BorderLayout.CENTER);
+		
+		
 		JLabel lblStatus = new JLabel("");
 		toolBar_Bottom.add(lblStatus);
 	
-		
+	
 		m_lblStatus = lblStatus ; //save a reference to update on fly.
 		
-		SetStatus (m_sStatusDefault) ;
+		//background thread.
+		m_cs.StartWinApp(); 
 	}
 	
 	void Close ()
@@ -229,16 +259,46 @@ public class JTemplateCopy_AppWin
 			m_listModel.remove (0) ;
 		}
 	}
-	void SetStatus (String sStatus)
-	{
-		m_lblStatus.setText(sStatus);
-	}
-	//////////////////////////////////////
-	//Central class to contain all event handlers
+
+	////////////////////////////////////////
 	//
-	private class EventHandlers
+	private class CustomStuff
 	{
-		public void HandleGenericProjectClone ()
+		private JFrame m_jfPar = null ;
+		public CustomStuff (JFrame jfPar)
+		{
+			m_jfPar = jfPar ;
+		}
+		
+		public void StartWinApp ()
+		{
+			m_WorkerThread.start () ;
+			
+			SetStatus (m_sStatusDefault) ;
+
+			LogStartupSum () ;
+		}
+		public void ShutdownWinApp ()
+		{
+			m_WorkerThread.StopThread () ;
+		}
+
+		private void LogStartupSum ()
+		{
+			Log ("Program Started") ;
+			Log ("Demos JList and JMenu") ;
+		}
+		public void Close ()
+		{
+			/*
+			m_WorkerThread.StopThread();
+			setVisible (false) ;
+			dispose () ;
+			*/
+			//signal controlling form to close gracefully.
+			m_jfPar.dispatchEvent(new WindowEvent(m_jfPar, WindowEvent.WINDOW_CLOSING));
+		}
+		public void Do_GenericProjectClone ()
 		{
 			String sFN = TraceUtils.sGetFN() ;
 			String s = "" ;
@@ -272,10 +332,9 @@ public class JTemplateCopy_AppWin
 				
 			}
 			
-			exit: ;
 			SetStatus (m_sStatusDefault) ;			
 		}
-		public void HandleAbout ()
+		public void Do_About ()
 		{
 			String sFN = TraceUtils.sGetFN() ;
 			String s = "" ;
@@ -289,7 +348,232 @@ public class JTemplateCopy_AppWin
 			
 			SetStatus (m_sStatusDefault) ;
 		}
-	} ;
-	private EventHandlers m_EventHandlers = new EventHandlers () ; 
-	//////////////////////////////////////
+		public void Do_AddLog ()
+		{
+			String sFN = TraceUtils.sGetFN() ;
+			Log (sFN + " testing new log add") ;
+		}
+		public void Do_AddLogs ()
+		{
+			String sFN = TraceUtils.sGetFN() ;
+			
+			String sLog = "" ;
+			
+			for (int iLog = 0; iLog < 600; iLog++)
+			{
+				sLog = String.format("%s, Test Log %d", sFN, iLog + 1) ;
+				Log (sLog) ;
+			}
+		}
+		public void Do_MoveToEndOfLogs ()
+		{
+			String sFN = TraceUtils.sGetFN() ;
+			SetListToEnd () ;
+		}
+		void SetListToEnd ()
+		{
+			//http://stackoverflow.com/questions/5147768/scroll-jscrollpane-to-bottom
+			JScrollBar vert = m_scrollPane.getVerticalScrollBar();
+			
+			//int iPos = m_listModel.getSize() ;
+			int iPosWanted = vert.getMaximum() ; 
+			int iPosCurrent = vert.getValue() ;
+			if (iPosWanted != iPosCurrent)
+			{
+				vert.setValue(iPosWanted);
+			}
+			/*
+			m_list.setSelectedIndex(m_listModel.getSize() - 1);
+			*/
+		}
+		void FlushLogs ()
+		{
+			int iMaxFlush = 100 ;
+			int iNumFlushed = 0 ;
+			while (true)
+			{
+				if (iNumFlushed >= iMaxFlush)
+				{
+					break ;
+				}
+				String sLog = m_Logs.sGetLog() ;
+				if (sLog == "")
+				{
+					break ;
+				}
+
+				m_listModel.addElement(sLog);
+				
+				int iSize = m_listModel.getSize() ;
+				if (iSize + 1 >= m_ilistModelMax)
+				{
+					//pop the first element off.
+					m_listModel.remove (0) ;
+				}
+				iNumFlushed++ ;
+			}
+		}
+		void Log (String sLog)
+		{
+			DateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
+			Date date = new Date();
+			String sDate = dateFormat.format(date);
+			
+			String sFullLog = sDate + " " + sLog ;
+			
+			m_Logs.Log (sFullLog) ;
+			/*add to queue
+			m_listModel.addElement(sFullLog);
+			
+			int iSize = m_listModel.getSize() ;
+			if (iSize > m_ilistModelMax)
+			{
+				//pop the first element off.
+				m_listModel.remove (0) ;
+			}
+		
+			//SetListToEnd () ;
+			 
+			 */
+		}
+		void SetStatus (String sStatus)
+		{
+			m_lblStatus.setText(sStatus);
+		}
+		//////////////////////////////////
+		//
+		public class Logs
+		{
+			private List<String> m_lstLogs = new ArrayList<String>();
+			public synchronized void Log (String sLog)
+			{
+				m_lstLogs.add(sLog) ;
+			}
+			public synchronized String sGetLog ()
+			{
+				String sr = "" ;
+				if (m_lstLogs.size() > 0)
+				{
+					sr = m_lstLogs.get(0) ;
+					m_lstLogs.remove(0) ;
+				}
+				return sr ;
+			}
+		}
+		Logs m_Logs = new Logs () ; 
+				
+		//////////////////////////////////
+		//http://docs.oracle.com/javase/tutorial/essential/concurrency/runthread.html
+		//
+		public class BackGroundThread extends Thread 
+		{
+			private boolean m_bDoShutdown = false ;
+			public synchronized void SignalShutdown ()
+			{
+				m_bDoShutdown = true ;
+			}
+			public synchronized boolean bDoShutdown ()
+			{
+				return m_bDoShutdown ;
+			}
+			public void Do_GenericProjectClone ()
+			{
+				String sFN = TraceUtils.sGetFN() ;
+				String s = "" ;
+				
+				SetStatus (sFN) ;
+				
+				try
+				{
+					//s = sFN + " todo" ;
+					//ProgUtils.MsgBox(s);
+					
+					String sSrcDir = "" ;
+					sSrcDir = GetDirDlg.sBrowseDir(m_AppSettings.m_sSrcDir, "Select source project directory", m_Frame) ;
+					if (sSrcDir == "")
+					{
+						throw new Exception ("No source directory selected") ;
+					}
+					
+					String sDestDir = "" ;
+					sDestDir = GetDirDlg.sBrowseDir(m_AppSettings.m_sDestDir, "Select destination project directory", m_Frame) ;
+					if (sDestDir == "")
+					{
+						throw new Exception ("No destination directory selected") ;
+					}
+					
+					m_AppSettings.m_sSrcDir = sSrcDir ;
+					m_AppSettings.m_sDestDir = sDestDir ;
+				}
+				catch (Exception exp)
+				{
+					
+				}
+				
+				exit: ;
+				SetStatus (m_sStatusDefault) ;			
+			}
+			public void StopThread ()
+			{
+				SignalShutdown () ;
+				while (isAlive()) ;
+			}
+			
+		    public void run() 
+		    {
+		    	String sFN = TraceUtils.sGetFN() ;
+		        //System.out.println("Hello from a thread!");
+		    	
+		    	String sLog = "" ;
+		    	
+		    	try
+		    	{
+			    	int iLoopCount = 0 ;
+			    	while (true)
+			    	{
+			    		if (bDoShutdown())
+			    		{
+			    			//exit loop to shutdown.
+			    			break ;
+			    		}
+			    		
+			    		Thread.sleep(1);
+			    		//looping in the thread.
+			    		iLoopCount++ ;
+			    		
+			    		if ((iLoopCount % 1000)==0)
+			    		{
+			    			sLog = String.format("%s,  %d times",
+			    					sFN,
+			    					iLoopCount) ;
+			    			//Log (sLog) ;
+			    		}
+			    		
+			    		FlushLogs () ;
+		    			SetListToEnd () ;
+			    	}
+		    	}
+		    	catch (Exception exp)
+		    	{
+		    		//exception raised.
+		    		sLog = String.format ("%s, exception %s",
+		    				sFN,
+		    				exp.getMessage()) ;
+		    		TraceUtils.Trc(sLog);
+		    	}
+		    }
+
+		    public void startMe() 
+		    {
+		    	this.start () ;
+		    }
+		    public void stopMe ()
+		    {
+		    }
+
+		}
+		private BackGroundThread m_WorkerThread = new BackGroundThread () ;
+	} //class CustomStuff def
+	private CustomStuff m_cs = new CustomStuff (this.m_Frame) ;
+	
 }

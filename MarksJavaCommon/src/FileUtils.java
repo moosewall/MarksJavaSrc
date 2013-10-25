@@ -3,6 +3,10 @@ import java.io.*;
 import java.nio.file.*;
 import java.net.URL ;
 import java.util.Map.Entry;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.nio.file.SimpleFileVisitor;
 
 public class FileUtils 
 {
@@ -202,4 +206,24 @@ public class FileUtils
 		}
 	    return contents.toString();		
 	}
+	//////////////////////////////////////////////////
+	//Routine to return a list of the files that
+	//fit the specified mask e.g. *.*, *.tmp, etc.
+	//Search is recursive so all subdirectories will
+	//be search also.
+	//
+	//http://www.javapractices.com/topic/TopicAction.do?Id=68
+	//http://stackoverflow.com/questions/794381/how-to-find-files-that-match-a-wildcard-string-in-java
+	//
+	public static List<String> lstGetFileListRecursive 
+	 (String sFileMask,
+	  List<String>lstFilesIn)
+	{
+		 List<String> lstFiles = new ArrayList<String>();
+		 
+
+		 
+		 return lstFiles ;
+	}
+	
 }
