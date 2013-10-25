@@ -65,7 +65,7 @@ import java.util.*;
  *     java Find . -name "*.java"
  */
 
-public class FileFinder 
+public class FileGetter 
 {
 
     /**
@@ -73,7 +73,7 @@ public class FileFinder
      * all files that match the
      * specified pattern.
      */
-    public static class FileFindVisitor
+    public static class FileGetterVisitor
         extends SimpleFileVisitor<Path> 
     {
     	public List<String> m_lstFiles = new ArrayList<String>();
@@ -81,7 +81,7 @@ public class FileFinder
         private final PathMatcher matcher;
         private int numMatches = 0;
 
-        FileFindVisitor(String pattern) 
+        FileGetterVisitor(String pattern) 
         {
             matcher = FileSystems.getDefault()
                     .getPathMatcher("glob:" + pattern);
@@ -96,7 +96,7 @@ public class FileFinder
             {
             	
                 numMatches++;
-                System.out.println(file);
+                //System.out.println(file);
                 String sFilePath = file.toString() ;
                 m_lstFiles.add(sFilePath) ;
             }
@@ -142,8 +142,11 @@ public class FileFinder
         System.exit(-1);
     }
     ///////////////////////////////////////////////
+    //Convenience function that takes a full path
+    //with mask as input, and returns all files found
+    //as output.
     //
-    public static List <String> lstFindFilesRecursive
+    public static List <String> lstGetFileListRecursive
     	(String sFileMask) //e.g. c:\tmp\*.*, c:\tmp\*.tmp
     			throws IOException
     {
@@ -158,7 +161,7 @@ public class FileFinder
 		 Path pthDir = Paths.get(sDir) ;
 		 String sPattern = sName ;
 		
-		 FileFinder.FileFindVisitor finder = new FileFinder.FileFindVisitor(sPattern);
+		 FileGetter.FileGetterVisitor finder = new FileGetter.FileGetterVisitor(sPattern);
 		
 		 Files.walkFileTree(pthDir, finder);
 		 finder.done();
@@ -167,14 +170,66 @@ public class FileFinder
 		 
 		 return lstFiles ;
     }
+    ///////////////////////////////////////////////
+    //Convenience function that takes a full path
+    //with mask as input, and returns all files found
+    //as output.
+    //c:\tmp\*.* gets all files
+    //c:\tmp\*.txt gets all text files.
+    //
+    public static List <String> lstGetFileList
+    	(String sFileMask) //e.g. c:\tmp\*.*, c:\tmp\*.txt
+    			throws IOException
+    {
+		 List<String> lstFiles = new ArrayList<String>();
+		 
+		 String sSep = File.separator ;
+		 
+		 File f = new File(sFileMask);
+		 String sDir = f.getParent() ; //this is the directory
+		 String sName = f.getName() ; //this is the file name, or wildcard
+		 
+		 Path pthDir = Paths.get(sDir) ;
+		 String sPattern = sName ;
+		
+		 PathMatcher pm = FileSystems.getDefault()
+                 .getPathMatcher("glob:" + sPattern);
+
+		 File fDir = new File (sDir) ;
+		 String [] saFiles = fDir.list() ;
+		 for (int iFiles = 0; iFiles < saFiles.length; iFiles++)
+		 {
+			 String sCurFilePath = sDir + sSep + saFiles[iFiles] ;
+			 
+	         Path pthCurFile = Paths.get(sCurFilePath) ;
+	         Path pthCurFileName = pthCurFile.getFileName() ;
+	         if (   pthCurFileName != null
+	        	 && pm.matches(pthCurFileName))
+        	 {
+	        	 lstFiles.add(sCurFilePath) ;
+        	 }
+		 }
+		 
+		 return lstFiles ;
+    }
+   
     public static void main(String[] args) throws IOException 
     {
     	String sLog = "" ;
-    	//String sMask = "c:\\tmp\\*.txt" ;
-    	String sMask = "c:\\tmp\\JacksInsBack.jpeg" ;
-    	List <String> lstFiles = lstFindFilesRecursive (sMask) ;
-    	sLog = String.format ("%d files returned for mask %s",
+    	String sMask = "c:\\tmp\\*.txt" ;
+    	//String sMask = "c:\\tmp\\JacksInsBack.jpeg" ;
+    	List <String> lstFiles = lstGetFileListRecursive (sMask) ;
+    	sLog = String.format ("Recursive search, %d files returned for mask %s",
     			lstFiles.size(),
     			sMask) ;
+    	System.out.println(sLog) ;
+    	
+    	sMask = "c:\\tmp\\*.ini" ;
+    	lstFiles = lstGetFileList (sMask) ;
+    	sLog = String.format ("Cur Dir search, %d files returned for mask %s",
+    			lstFiles.size(),
+    			sMask) ;
+    	System.out.println(sLog) ;
+    	
     }
 }
