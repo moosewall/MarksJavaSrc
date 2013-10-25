@@ -1,5 +1,10 @@
 //JTemplateCopy_AppWin.java
 
+/*
+ * Logs
+ * 10/25/2013, MW, testing GITHUB exchange
+ *
+*/
 import java.awt.EventQueue;
 
 import javax.swing.JFrame;
