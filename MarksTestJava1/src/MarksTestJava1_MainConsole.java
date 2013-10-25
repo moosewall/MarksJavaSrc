@@ -1,5 +1,5 @@
 
-public class MainConsole {
+public class MarksTestJava1_MainConsole {
 	public static void main(String[] args) throws Exception 
 	{
 		//HelloWorld () ;
@@ -11,7 +11,7 @@ public class MainConsole {
 		 
 		 */
 		
-		AppState.initAppDetails(MainConsole.class); //call this before anything!
+		AppState.initAppDetails(MarksTestJava1_MainConsole.class); //call this before anything!
 		
 		String sFN = TraceUtils.sGetFN () ;
 		AppLog.Log(sFN + " initialized");
@@ -21,7 +21,7 @@ public class MainConsole {
 		//StdioLogger.Log("test");
 	
 		
-		AppSettings settings = new AppSettings () ;
+		MarksTestJava1_AppSettings settings = new MarksTestJava1_AppSettings () ;
 		settings.ReadSettingsFromIni();
 		settings.WriteSettingsToIni();  //write back so a stub .ini exists
 		

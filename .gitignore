@@ -3,7 +3,10 @@
 #################
 
 *.pydevproject
-.project
+
+#MW, include this
+#.project
+
 .metadata
 bin/
 tmp/
@@ -12,7 +15,10 @@ tmp/
 *.swp
 *~.nib
 local.properties
-.classpath
+
+#MW, include this 
+#.classpath
+
 .settings/
 .loadpath
 

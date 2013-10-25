@@ -9,14 +9,14 @@ import org.ini4j.* ;
 import java.util.prefs.* ;
 import java.io.File ;
 
-public class AppSettings 
+public class MarksTestJava1_AppSettings 
 {
 	public String m_sSetting1 = "" ;
 	public int m_iSetting2 = 1 ;
 	
 	public static String SETTINGS = "SETTINGS" ;
 	
-	public AppSettings ()
+	public MarksTestJava1_AppSettings ()
 	{
 		
 	}
