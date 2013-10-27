@@ -10,6 +10,13 @@ import java.nio.file.SimpleFileVisitor;
 
 public class FileUtils 
 {
+	////////////////////////////////////////////////////
+	//
+	public static void main(String[] args) throws Exception 
+	{
+		test_ReplaceTextInFiles() ;
+		//test_RenameDirs () ;
+	}
 	////////////////////////////////
 	//
 	public static void test1 ()
@@ -62,11 +69,14 @@ public class FileUtils
 		public String m_sFileName = "" ;
 		public String m_sFileNameNoExt = "" ;
 		public String m_sFileExt = "" ;
+		public boolean m_bIsDirectory = false ;
 		public FileSum (String sFilePath)
 		{
 			m_sFilePath = sFilePath ;
 			
 			File f = new File (sFilePath) ;
+			
+			m_bIsDirectory = f.isDirectory() ;
 			
 			/////
 			//Make sure dir has path separator at end.
@@ -130,7 +140,13 @@ public class FileUtils
 	{
 		FileSum fs = new FileSum (sFilePath) ;
 		return fs.m_sFileDir ;
-	
+	}
+	////////////////////////////////
+	//
+	public static boolean bIsDirectory (String sPath)
+	{
+		FileSum fs = new FileSum (sPath) ;
+		return fs.m_bIsDirectory ;
 	}
 	////////////////////////////////
 	//
@@ -138,7 +154,10 @@ public class FileUtils
 		(String sFilePath,
 		 String sStrToWrite)
 	{
+		String sFN = TraceUtils.sGetFN() ;
 		boolean br = false ;
+		
+		String s = "" ;
 		
 		try
 		{
@@ -147,6 +166,10 @@ public class FileUtils
 			{
 				fw = new FileWriter (sFilePath) ;
 				fw.write(sStrToWrite);
+			}
+			catch (Exception expWrite)
+			{
+				s = sFN + " exception " + expWrite.getMessage() ;
 			}
 			finally
 			{
@@ -206,24 +229,381 @@ public class FileUtils
 		}
 	    return contents.toString();		
 	}
-	//////////////////////////////////////////////////
-	//Routine to return a list of the files that
-	//fit the specified mask e.g. *.*, *.tmp, etc.
-	//Search is recursive so all subdirectories will
-	//be search also.
+	/////////////////////////////////////////
 	//
-	//http://www.javapractices.com/topic/TopicAction.do?Id=68
-	//http://stackoverflow.com/questions/794381/how-to-find-files-that-match-a-wildcard-string-in-java
+	/*
+	 * research:
+	 * http://codingjunkie.net/java-7-copy-move/
+	 * http://www.mkyong.com/java/how-to-copy-directory-in-java/
+	 */
+	/*FileUtils.cpp way
+	/////////////////////////////////////////////////////////////////
+	//Routine to copy an exact image of the specified source
+	//directory to the specified destination dir.
 	//
-	public static List<String> lstGetFileListRecursive 
-	 (String sFileMask,
-	  List<String>lstFilesIn)
+	BOOL bCopyDir 
+		(const char *lpszSrcDir,
+		 const char *lpszDestDir,
+		 CStringList *pLogs)
 	{
-		 List<String> lstFiles = new ArrayList<String>();
-		 
-
-		 
-		 return lstFiles ;
+		Trace ("\n::bCopyDir ") ;
+		BOOL bresult = TRUE ;
+	
+		CString csSrcDir = lpszSrcDir ;
+		CString csDestDir = lpszDestDir ;
+		POSITION pos ;
+		CStringList cslDirFiles ;
+		CString csMask ;
+		CString csFile, csFileUpper, csFileTrim ;
+		CString cs ;
+	
+		CString csNew ;
+	
+		//GetFileListRecursive will copy in order for easy copying
+		csMask.Format ("%s\\*.*", csSrcDir) ;
+		GetFileListRecursive
+			( csMask,
+			  cslDirFiles ) ;
+		if (cslDirFiles.GetCount() < 1)
+		{
+			Trace ("\n  not files in %s", csSrcDir) ;
+			bresult = FALSE ;
+			goto exit ;
+		} ;
+	
+		pos = cslDirFiles.GetHeadPosition () ;
+		while (pos)
+		{
+			csFile = cslDirFiles.GetNext (pos) ;
+			csFileUpper = csFile ;
+			csFileUpper.MakeUpper () ;
+	
+			//Make a copy of the file name without root dir
+			csFileTrim = csFile.Mid (csSrcDir.GetLength()) ;
+	
+			csNew.Format ("%s%s",
+				csDestDir,
+				csFileTrim) ;
+			if (bIsDirectory (csFile))
+			{
+				//create a new subdir in dest.
+				if (!CreateDirectory (csNew, NULL))
+				{
+					cs.Format ("Error creating directory %s", csNew) ;
+					Trace ("\n  %s", cs) ;
+					if (pLogs)
+					{
+						pLogs->AddTail (cs) ;
+					} ;
+					bresult = FALSE ;
+				} ;
+			}
+			else
+			{
+				//just copy the file.
+				bresult = bCopyFile
+					( csFile.GetBuffer(0),
+					  csNew.GetBuffer(0)) ;
+				if (!bresult)
+				{
+					//Trace ("\n  Error copying %s to %s", csFile, csNew) ;
+					//goto exit ;
+					cs.Format ("Error copying %s to %s",
+						csFile,
+						csNew) ;
+					if (pLogs)
+					{
+						pLogs->AddTail (cs) ;
+					} ;
+					bresult = FALSE ;
+				} ;
+			} ;
+		} ;
+	
+	exit: ;
+		return bresult ;
+	} ;
+	*/
+	public static void CopyDir
+		(String sSrcDir,
+		 String sDestDir) throws Exception
+	{
+		String sFN = TraceUtils.sGetFN() ;
+		
+		
+		throw new Exception (sFN + " todo, CODE!") ;
 	}
+	//////////////////////////////////////////
+	//
+	/*FileUtils.cpp reference
+	/////////////////////////////////////////////////////////////////////////////////
+	//Do a case insensitive replace of specified substring in the
+	//specified file list.
+	//
+	BOOL bReplaceTextInFiles
+		( CStringList &cslFiles,
+		  const char *pOldNamePrefix, 
+		  const char *pNewNamePrefix)
+	{
+		Trace ("\nCMainWorkerThread::bReplaceTextInFiles, %s, %s",
+			pOldNamePrefix, pNewNamePrefix) ;
+	
+		BOOL bresult = TRUE ;
+		POSITION pos ;
+		BOOL bLineChange ;
+		CString csLog ;
+	
+		CString csOrigImage, csNewImage ;
+	
+		CString csFileName;
+		pos = cslFiles.GetHeadPosition () ;
+		while (pos)
+		{
+			csFileName = cslFiles.GetNext (pos) ;
+	
+			if (bIsDirectory (csFileName))
+			{
+				continue ;
+			} ;
+	
+			Trace ("\n  opening for parse->%s", csFileName) ;
+			if (!bDumpFileIntoBuffer
+				( csFileName.GetBuffer(0),
+				  csOrigImage ))
+			{
+				csLog.Format ("  Error opening %s",
+					csFileName) ;
+				Trace ("\n  %s", csLog) ;
+				continue ;
+			} ;
+	
+			Trace ("\n  %s opening, continue", csFileName) ;
+	
+			bLineChange = bReplaceTextInBuf
+				( csOrigImage,
+				  pOldNamePrefix,
+				  pNewNamePrefix,
+				  csNewImage ) ;
+	
+			if (bLineChange)
+			{
+				//Write out new file image.
+				csLog.Format ("updating contents of %s",
+					csFileName) ;
+				Trace ("\n  %s", csLog) ;
+	
+				if (!bDumpBufToFile
+					( (UCHAR*)csNewImage.GetBuffer(0),
+					  csNewImage.GetLength (),
+					  csFileName.GetBuffer(0)))
+				{
+					csLog.Format ("Error replacing strings in %s",
+						csFileName) ;
+					Trace ("\n  %s", csLog) ;
+				} ;
+			} ;
+	
+		} ;//while iterating file list
+	
+		Trace ("\n  returning %d", bresult) ;
+		return bresult ;
+	} ;
+	 */
+	public static void test_ReplaceTextInFiles ()
+	{
+		List<String>lstFiles = new ArrayList<String>() ;
+		
+		String sDir = "c:\\tmp\\" ;
+		lstFiles.add(sDir + "JReplaceTextTest.txt") ;
+		try 
+		{
+			ReplaceTextInFiles (lstFiles, "before", "after mark was here") ;
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
+	public static void ReplaceTextInFiles
+		(List<String>lstFiles,
+		 String sOldText,
+		 String sNewText) throws Exception
+	{
+		String sFN = TraceUtils.sGetFN() ;
+		
+		boolean b = false ;
+		
+		for (int iFile=0; iFile<lstFiles.size(); iFile++)
+		{
+			String sCurFilePath = lstFiles.get(iFile);
+			
+			b = bIsDirectory (sCurFilePath) ;
+			if (b)
+			{
+				continue ; //directory, skip
+			}
+			
+			String sFileImage = sDumpFileIntoStr (sCurFilePath) ;
+			if (sFileImage == "")
+			{
+				continue ; //empty file, skip
+			}
+			String sNewFileImage = BufUtils.sReplaceTextInBuf
+				(sFileImage,
+				 sOldText,
+				 sNewText) ;
+			if (sFileImage != sNewFileImage)
+			{
+				//file image changed, write it out.
+				bDumpStrIntoFile (sCurFilePath, sNewFileImage) ;
+			}
+			else
+			{
+				//no change, nothing to do.
+			}
+		}
+	}
+	//////////////////////////////////////////////////////
+	//
+	/*FileUtils.cpp reference
+	/////////////////////////////////////////////////////////////////////////////////
+	//
+	BOOL bRenameDirs
+		( CStringList &cslFileNames, 
+		  const char *pOldNamePrefix, 
+		  const char *pNewNamePrefix)
+	{
+		BOOL bresult = TRUE ;
+	
+		BOOL bNameChanged = FALSE ;
+	
+		CString csDir;
+	
+		CString csFileName, csNewFileName, csFullFileName, csNewFullFileName ;
+		POSITION pos, LastPos ;
+		CString csLog ;
+	
+		//Now is the hard part.  Open each file
+		//in the directory and replace project name text
+		//with new text.
+		pos = cslFileNames.GetHeadPosition () ;
+		while (pos)
+		{
+			LastPos = pos ;
+			csFullFileName = cslFileNames.GetNext (pos) ;
+			//csFullFileName.MakeUpper () ;
+	
+	
+			csFileName = csParseFileName (csFullFileName.GetBuffer(0)) ;
+			csDir = csParseFilePath (csFullFileName.GetBuffer(0)) ;
+	
+			Trace ("\n  checking for rename: %s", csFileName) ;
+	
+			bNameChanged = bReplaceTextInBuf
+				( csFileName,
+				  pOldNamePrefix,
+				  pNewNamePrefix,
+				  csNewFileName ) ;
+			if (bNameChanged)
+			{
+				Trace ("\n  Renaming...") ;
+				TRY
+				{
+					csLog.Format ("Renaming %s to %s",
+						csFileName, csNewFileName) ;
+	
+					csNewFullFileName.Format ("%s\\%s",
+						csDir, csNewFileName) ;
+	
+					if (bIsDirectory (csFullFileName))
+					{
+						if (rename (csFullFileName, csNewFullFileName) != 0)
+						{
+							Trace ("\n  error renaming directory.") ;
+						} ;
+	
+						//Update the name in the list
+						cslFileNames.SetAt (LastPos, csNewFullFileName) ;				
+					} ;
+	
+				}
+				CATCH( CFileException, e )
+				{
+					csLog.Format ("Error renaming %s to %s (%s)",
+						csFileName, csNewFileName, e->m_cause) ;
+					delete e ;
+					continue ;
+				}
+				END_CATCH
+	
+			} ;
+				  
+		} ;//while iterating file list
+	
+	
+		return bresult ;
+	} ;
+    */
+	//
+	public static void test_RenameDirs ()
+	{
+		List<String> lstDirs = new ArrayList<String> () ;
+		lstDirs.add("C:\\tmp\\DirToRename") ;
+		try 
+		{
+			RenameDirs (lstDirs, "DirToRename", "DirToRenameX") ;
+		} catch (Exception e) 
+		{
+			e.printStackTrace();
+		}
+	}
+	public static void RenameDirs
+		(List<String>lstDirs,
+		 String sOldNamePre,
+		 String sNewNamePre) throws Exception
+	 {
+		String sFN = TraceUtils.sGetFN() ;
+		
+		boolean b = false ;
+		String s = "" ;
+		
+		String sSep = File.separator ; 
+		
+		for (int iDir=0; iDir<lstDirs.size(); iDir++)
+		{
+			String sDir = lstDirs.get(iDir);
+			
+			b = bIsDirectory (sDir) ;
+			if (!b)
+			{
+				continue ;
+			}
+			
+			String sDirParent = sParseFilePath (sDir) ;
+			String sDirName = sParseFileName (sDir) ;
+			
+			String sNewDirName = BufUtils.sReplaceTextInBuf
+					(sDirName,
+					 sOldNamePre, 
+					 sNewNamePre) ;
+			if (sNewDirName != sDirName)
+			{
+				
+				File fDir = new File (sDir) ;
+				
+				String sNewDirPath = sDirParent + sSep + sNewDirName ;
+				File fDirNew = new File (sNewDirPath) ;
+				b = fDir.renameTo(fDirNew) ;
+				if (!b)
+				{
+					s = String.format ("%s, Error renaming directory %s to %s",
+							sFN,
+							sDir,
+							sNewDirPath) ;
+					throw new Exception (s) ;
+				}
+			}
+		}
+	 }
 	
 }

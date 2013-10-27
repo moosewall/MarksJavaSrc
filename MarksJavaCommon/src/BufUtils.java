@@ -24,7 +24,7 @@ public class BufUtils {
     	//String sEol = System.getProperty("line.separator") ;
     	
     	//Platform independent way per http://stackoverflow.com/questions/207947/java-how-do-i-get-a-platform-independent-new-line-character
-    	String sEol = "%n" ;
+    	String sEol = String.format("%n") ;
     	
     	return sEol ;
     }
