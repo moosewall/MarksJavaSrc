@@ -1,5 +1,7 @@
 
 import java.io.*;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 import java.nio.file.*;
 import java.net.URL ;
 import java.util.Map.Entry;
@@ -14,7 +16,8 @@ public class FileUtils
 	//
 	public static void main(String[] args) throws Exception 
 	{
-		test_ReplaceTextInFiles() ;
+		test_bbDumpFileIntoByteBuffer () ;
+		//test_ReplaceTextInFiles() ;
 		//test_RenameDirs () ;
 	}
 	////////////////////////////////
@@ -191,6 +194,20 @@ public class FileUtils
 	//
 	public static String sDumpFileIntoStr (String sFilePath)
 	{
+		String sFN = TraceUtils.sGetFN() ;
+		String sr = "" ;
+		
+		//Read file into a ByteBuffer, then convert it to a string.
+		ByteBuffer bb = null;
+		bb = bbDumpFileIntoByteBuffer (sFilePath) ;
+		if (bb != null)
+		{
+			sr = new String (bb.array()) ;
+		}
+		return sr ;
+		
+
+		/*Another way to read a text file.
 		//http://www.javapractices.com/topic/TopicAction.do?Id=42
 		
 		String sEol = BufUtils.sGetEol() ;
@@ -206,12 +223,11 @@ public class FileUtils
 			try
 			{
 				String sLine = null; //not declared within while loop
-				/*
-				* readLine is a bit quirky :
-				* it returns the content of a line MINUS the newline.
-				* it returns null only for the END of the stream.
-				* it returns an empty String if two newlines appear in a row.
-				*/
+				
+				//readLine is a bit quirky :
+				//it returns the content of a line MINUS the newline.
+				//it returns null only for the END of the stream.
+				//it returns an empty String if two newlines appear in a row.
 				while ((sLine = br.readLine()) != null)
 				{
 				  contents.append(sLine);
@@ -227,7 +243,69 @@ public class FileUtils
 		{
 		  ex.printStackTrace();
 		}
-	    return contents.toString();		
+	    return contents.toString();
+	    */
+	}
+	////////////////////////////////
+	//
+	//research:
+	//http://www.java2s.com/Code/Java/File-Input-Output/UseNIOtoreadatextfile.htm
+	//
+	public static void test_bbDumpFileIntoByteBuffer ()
+	{
+		String sFN = TraceUtils.sGetFN() ;
+	
+		String sDir = "c:\\tmp\\" ;
+		String sFile = sDir + "testfile.txt" ;
+		ByteBuffer bb = bbDumpFileIntoByteBuffer (sFile) ;
+		String s = sDumpFileIntoStr (sFile) ;
+	}
+	public static ByteBuffer bbDumpFileIntoByteBuffer (String sFilePath)
+	{
+		String sFN = TraceUtils.sGetFN() ;
+		ByteBuffer bbr = null ;
+		
+		String sLog = "" ;
+		
+		try 
+		{
+			FileInputStream fIn = null;
+			FileChannel fChan = null;
+			long fSize = 0;
+			ByteBuffer mBuf = null;
+			    
+			try
+			{
+				fIn = new FileInputStream(sFilePath);
+			    fChan = fIn.getChannel();
+			    fSize = fChan.size();
+			    mBuf = ByteBuffer.allocate((int) fSize);
+			    fChan.read(mBuf);
+			    mBuf.rewind();
+			    bbr = mBuf ;
+			}
+			catch (Exception expReading)
+			{
+				sLog = String.format("%s, exception reading %s.  %s", 
+						sFN,
+						sFilePath,
+						expReading.getMessage()) ;
+				TraceUtils.Trc(sLog);
+			}
+			finally 
+			{
+				if (fIn != null)
+				{
+					fIn.close();
+					fIn = null ;
+				}
+			}
+		}
+		catch (IOException ex)
+		{
+		  ex.printStackTrace();
+		}
+		return bbr ;
 	}
 	/////////////////////////////////////////
 	//
