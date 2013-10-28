@@ -46,6 +46,7 @@ import javax.swing.SwingConstants;
 
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.File;
 
 public class JTemplateCopy_AppWin 
 {
@@ -235,14 +236,16 @@ public class JTemplateCopy_AppWin
 		m_lblStatus = lblStatus ; //save a reference to update on fly.
 		
 		//background thread.
+		m_cs = new CustomStuff (this.m_Frame) ;
 		m_cs.StartWinApp(); 
 	}
-	
+	/*
 	void Close ()
 	{
 		m_Frame.setVisible (false) ;
 		m_Frame.dispose () ;
 	}
+	*/
 	void Log (String sLog)
 	{
 		DateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
@@ -280,6 +283,7 @@ public class JTemplateCopy_AppWin
 		}
 		public void ShutdownWinApp ()
 		{
+			m_AppSettings.WriteSettingsToIni();
 			m_WorkerThread.StopThread () ;
 		}
 
@@ -290,11 +294,6 @@ public class JTemplateCopy_AppWin
 		}
 		public void Close ()
 		{
-			/*
-			m_WorkerThread.StopThread();
-			setVisible (false) ;
-			dispose () ;
-			*/
 			//signal controlling form to close gracefully.
 			m_jfPar.dispatchEvent(new WindowEvent(m_jfPar, WindowEvent.WINDOW_CLOSING));
 		}
@@ -303,33 +302,72 @@ public class JTemplateCopy_AppWin
 			String sFN = TraceUtils.sGetFN() ;
 			String s = "" ;
 			
+			String sSep = File.separator ;
+			
 			SetStatus (sFN) ;
 			
 			try
 			{
 				//s = sFN + " todo" ;
 				//ProgUtils.MsgBox(s);
-				
+
 				String sSrcDir = "" ;
+				String sDestDir = "" ;
+				String sNewPrjName = "" ;
+				
 				sSrcDir = GetDirDlg.sBrowseDir(m_AppSettings.m_sSrcDir, "Select source project directory", m_Frame) ;
 				if (sSrcDir == "")
 				{
 					throw new Exception ("No source directory selected") ;
 				}
 				
-				String sDestDir = "" ;
 				sDestDir = GetDirDlg.sBrowseDir(m_AppSettings.m_sDestDir, "Select destination project directory", m_Frame) ;
 				if (sDestDir == "")
 				{
 					throw new Exception ("No destination directory selected") ;
 				}
 				
+				sNewPrjName = GetStrDlg.sEnterStr(m_AppSettings.m_sDestName, "Enter destination project name", m_Frame) ;
+				if (sNewPrjName == "")
+				{
+					throw new Exception ("No destination project name specified") ;
+				}
+				
+				//
+				s = String.format("Creating [%s] in [%s] from [%s]...", 
+						sNewPrjName,
+						sDestDir,
+						sSrcDir) ;
+				Log (s) ;
+
+				String sDestPrjDir = sDestDir + sSep + sNewPrjName ;
+				
+				File fDestPrjDir = new File (sDestPrjDir) ;
+				if (fDestPrjDir.exists())
+				{
+					s = "Destination directory already exists " + sDestPrjDir ;
+					throw new Exception (s) ;
+				}
+				FileUtils.CopyDirOrFile(sSrcDir, sDestPrjDir);
+				
+				String sOldPrjName = FileUtils.sParseFileName(sSrcDir) ;
+				
+				Log ("Renaming Files in " + sDestPrjDir) ;
+				FileUtils.RenameFilesInDir(sDestPrjDir, sOldPrjName, sNewPrjName);
+				
+				Log ("Replacing Text in File in " + sDestPrjDir) ;
+				FileUtils.ReplaceTextInFilesInDir(sDestPrjDir, sOldPrjName, sNewPrjName);
+				
 				m_AppSettings.m_sSrcDir = sSrcDir ;
 				m_AppSettings.m_sDestDir = sDestDir ;
+				m_AppSettings.m_sDestName = sNewPrjName ;
+				
+				Log (sFN + ", Operation completed OK") ;
 			}
 			catch (Exception exp)
 			{
-				
+				s = String.format("%s, exception %s", sFN, exp.getMessage()) ;
+				Log (s) ;
 			}
 			
 			SetStatus (m_sStatusDefault) ;			
@@ -422,19 +460,6 @@ public class JTemplateCopy_AppWin
 			String sFullLog = sDate + " " + sLog ;
 			
 			m_Logs.Log (sFullLog) ;
-			/*add to queue
-			m_listModel.addElement(sFullLog);
-			
-			int iSize = m_listModel.getSize() ;
-			if (iSize > m_ilistModelMax)
-			{
-				//pop the first element off.
-				m_listModel.remove (0) ;
-			}
-		
-			//SetListToEnd () ;
-			 
-			 */
 		}
 		void SetStatus (String sStatus)
 		{
@@ -475,43 +500,6 @@ public class JTemplateCopy_AppWin
 			public synchronized boolean bDoShutdown ()
 			{
 				return m_bDoShutdown ;
-			}
-			public void Do_GenericProjectClone ()
-			{
-				String sFN = TraceUtils.sGetFN() ;
-				String s = "" ;
-				
-				SetStatus (sFN) ;
-				
-				try
-				{
-					//s = sFN + " todo" ;
-					//ProgUtils.MsgBox(s);
-					
-					String sSrcDir = "" ;
-					sSrcDir = GetDirDlg.sBrowseDir(m_AppSettings.m_sSrcDir, "Select source project directory", m_Frame) ;
-					if (sSrcDir == "")
-					{
-						throw new Exception ("No source directory selected") ;
-					}
-					
-					String sDestDir = "" ;
-					sDestDir = GetDirDlg.sBrowseDir(m_AppSettings.m_sDestDir, "Select destination project directory", m_Frame) ;
-					if (sDestDir == "")
-					{
-						throw new Exception ("No destination directory selected") ;
-					}
-					
-					m_AppSettings.m_sSrcDir = sSrcDir ;
-					m_AppSettings.m_sDestDir = sDestDir ;
-				}
-				catch (Exception exp)
-				{
-					
-				}
-				
-				exit: ;
-				SetStatus (m_sStatusDefault) ;			
 			}
 			public void StopThread ()
 			{
@@ -574,6 +562,6 @@ public class JTemplateCopy_AppWin
 		}
 		private BackGroundThread m_WorkerThread = new BackGroundThread () ;
 	} //class CustomStuff def
-	private CustomStuff m_cs = new CustomStuff (this.m_Frame) ;
+	private CustomStuff m_cs = null ;
 	
 }

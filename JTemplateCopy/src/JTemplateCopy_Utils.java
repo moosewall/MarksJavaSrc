@@ -6,6 +6,8 @@ public class JTemplateCopy_Utils {
 
 	}
 
+	/////////////////////////////////////////////
+	//
 	public static void DoGenericProjectCopy 
 		(JTemplateCopy_AppWin aw)
 	{

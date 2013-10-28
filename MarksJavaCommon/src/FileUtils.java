@@ -567,6 +567,74 @@ public class FileUtils
 		}
 		
 	}
+	public static void RenameFilesInDir
+		(String sDir,
+		 String sOldText,
+		 String sNewText) throws Exception
+	{
+		String sFN = TraceUtils.sGetFN() ;
+		
+		String s = "" ;
+		
+		String sSep = File.separator ;
+		
+		String sDirMask = sDir + sSep + "*.*" ;
+		List<String>lstFiles = FileGetter.lstGetFileListRecursive(sDirMask) ;
+		
+		for (int iFile=0; iFile<lstFiles.size(); iFile++)
+		{
+			String sFilePath = lstFiles.get(iFile) ;
+			File fFilePath = new File (sFilePath) ;
+			
+			String sFileDir = sParseFilePath (sFilePath) ;
+			String sFileName = sParseFileName (sFilePath) ;
+			String sNewFileName = BufUtils.sReplaceTextInBuf(sFileName, sOldText, sNewText) ;
+			if (!sNewFileName.equals(sFileName))
+			{
+				String sNewFilePath = sFileDir + sSep + sNewFileName ;
+				File fNewFilePath = new File (sNewFilePath) ;
+				if (!fNewFilePath.exists())
+				{
+					fFilePath.renameTo(fNewFilePath) ;
+				}
+				else
+				{
+					s = sFN + " error rename to file, already exists " + sNewFilePath ;
+					throw new Exception (s) ;
+				}
+			}
+		}
+	}
+	public static void ReplaceTextInFilesInDir
+		(String sDir,
+		 String sOldText,
+		 String sNewText) throws Exception
+	{
+		String sFN = TraceUtils.sGetFN() ;
+		
+		String s = "" ;
+		
+		String sSep = File.separator ;
+		
+		String sDirMask = sDir + sSep + "*.*" ;
+		List<String>lstFiles = FileGetter.lstGetFileListRecursive(sDirMask) ;
+		
+		for (int iFile=0; iFile<lstFiles.size(); iFile++)
+		{
+			String sFilePath = lstFiles.get(iFile) ;
+			File fFilePath = new File (sFilePath) ;
+			if (fFilePath.isDirectory())
+			{
+				continue ;
+			}
+			String sFileImage = sDumpFileIntoStr (sFilePath) ;
+			String sNewFileImage = BufUtils.sReplaceTextInBuf(sFileImage, sOldText, sNewText) ;
+			if (!sFileImage.equals(sNewFileImage))
+			{
+				bDumpStrIntoFile (sFilePath, sNewFileImage) ;
+			}
+		}
+	}
 	public static void ReplaceTextInFiles
 		(List<String>lstFiles,
 		 String sOldText,

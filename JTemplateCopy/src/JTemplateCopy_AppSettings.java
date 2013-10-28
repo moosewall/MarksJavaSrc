@@ -18,6 +18,7 @@ public class JTemplateCopy_AppSettings
 	
 	public String m_sSrcDir = "" ;
 	public String m_sDestDir = "" ;
+	public String m_sDestName = "" ;
 	
 	public static String SETTINGS = "SETTINGS" ;
 	
@@ -68,6 +69,7 @@ public class JTemplateCopy_AppSettings
 			
 			m_sSrcDir = iniPsec.get("SrcDir", m_sSrcDir) ;
 			m_sDestDir = iniPsec.get("DestDir", m_sDestDir) ;
+			m_sDestName = iniPsec.get("DestName", m_sDestName) ;
 			
 			//m_sSetting1 = ini.getString(SETTINGS, "Setting1", m_sSetting1) ;
 		}
@@ -100,6 +102,7 @@ public class JTemplateCopy_AppSettings
 			*/
 			iniPsec.put("SrcDir", m_sSrcDir);
 			iniPsec.put("DestDir", m_sDestDir);
+			iniPsec.put("DestName", m_sDestName) ;
 
 			iniObj.store();
 		}
