@@ -16,7 +16,8 @@ public class FileUtils
 	//
 	public static void main(String[] args) throws Exception 
 	{
-		test_bbDumpFileIntoByteBuffer () ;
+		test_CopyDirOrFile () ;
+		//test_bbDumpFileIntoByteBuffer () ;
 		//test_ReplaceTextInFiles() ;
 		//test_RenameDirs () ;
 	}
@@ -402,14 +403,78 @@ public class FileUtils
 		return bresult ;
 	} ;
 	*/
-	public static void CopyDir
-		(String sSrcDir,
-		 String sDestDir) throws Exception
+	public static void test_CopyDirOrFile ()
+	{
+		String sSrc = "C:\\tmp\\__NICE_site_Data" ;
+		String sDest = "C:\\tmp\\__NICE_site_Data_COPYTEST" ;
+		try 
+		{
+			CopyDirOrFile (sSrc, sDest) ;
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	public static void CopyDirOrFile
+		(String sSrc,
+		 String sDest) throws Exception
 	{
 		String sFN = TraceUtils.sGetFN() ;
 		
+		String sSep = File.separator ; 
 		
-		throw new Exception (sFN + " todo, CODE!") ;
+		File fSrc = new File (sSrc) ;
+		if (fSrc.isDirectory())
+		{
+			String sSrcDir = fSrc.getPath() ;
+			
+			File fDest = new File (sDest) ;
+			if (!fDest.exists())
+			{
+				fDest.mkdir() ;
+			}
+			String sDestDir = fDest.getPath() ;
+			
+			String [] saFiles = fSrc.list() ;
+			for (int iSrcFile = 0; iSrcFile<saFiles.length; iSrcFile++)
+			{
+				String sSrcFileName = saFiles[iSrcFile] ;
+				String sSrcFilePath = sSrcDir + sSep + sSrcFileName ;
+				String sDestFilePath = sDestDir + sSep + sSrcFileName ;
+				CopyDirOrFile (sSrcFilePath, sDestFilePath) ;
+			}
+		}
+		else
+		{
+			//is a file, copy it.
+			CopyFile (sSrc, sDest) ;
+		}
+	}
+	//////////////////////////////////////
+	//
+	//
+	//research:
+	//http://www.mkyong.com/java/how-to-copy-directory-in-java/
+	//
+	public static void CopyFile
+		(String sSrcFile,
+		 String sDestFile)  throws Exception
+	{
+		InputStream in = new FileInputStream(sSrcFile);
+        OutputStream out = new FileOutputStream(sDestFile); 
+
+        byte[] buffer = new byte[1024];
+
+        int length;
+        
+        //copy the file content in bytes 
+        while ((length = in.read(buffer)) > 0)
+        {
+    	   out.write(buffer, 0, length);
+        }
+
+        in.close();
+        out.close();
 	}
 	//////////////////////////////////////////
 	//
