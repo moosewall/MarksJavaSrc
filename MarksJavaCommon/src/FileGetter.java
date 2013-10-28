@@ -1,10 +1,12 @@
+//FileGetter.java
+//
+//
+//10/28/2013, Mark Wallace,
 //Based on code from
 //http://docs.oracle.com/javase/tutorial/essential/io/examples/Find.java
 //which supports this article
 //http://docs.oracle.com/javase/tutorial/essential/io/find.html
 //http://docs.oracle.com/javase/tutorial/essential/io/fileOps.html#glob
-//
-//Renamed Find to FileFile and modified to return file list.
 //
 /*
  * Copyright (c) 2009, Oracle and/or its affiliates. All rights reserved.
@@ -142,7 +144,7 @@ public class FileGetter
         System.exit(-1);
     }
     ///////////////////////////////////////////////
-    //Convenience function that takes a full path
+    //Function that recursively searches a full path
     //with mask as input, and returns all files found
     //as output.
     //
@@ -171,11 +173,14 @@ public class FileGetter
 		 return lstFiles ;
     }
     ///////////////////////////////////////////////
-    //Convenience function that takes a full path
-    //with mask as input, and returns all files found
+    //Take a full directory path
+    //with mask (i.e. a glob http://en.wikipedia.org/wiki/Glob_(programming)) as input, 
+    //and returns all files found in the directory.
     //as output.
     //c:\tmp\*.* gets all files
     //c:\tmp\*.txt gets all text files.
+    //
+    //Note that subdirectories are not searched
     //
     public static List <String> lstGetFileList
     	(String sFileMask) //e.g. c:\tmp\*.*, c:\tmp\*.txt
@@ -212,7 +217,8 @@ public class FileGetter
 		 
 		 return lstFiles ;
     }
-   
+    ////////////////////////////////////////////////
+    //
     public static void main(String[] args) throws IOException 
     {
     	String sLog = "" ;
