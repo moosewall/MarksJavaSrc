@@ -13,6 +13,7 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JMenu;
 import javax.swing.JScrollBar;
+import javax.swing.ListModel;
 
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
@@ -242,6 +243,12 @@ public class JListTestFrame extends JFrame {
 		}
 		void SetListToEnd ()
 		{
+			int iListSize = m_list.getModel().getSize() ;
+			if (iListSize == 0)
+			{
+				return ;
+			}
+			
 			//http://stackoverflow.com/questions/5147768/scroll-jscrollpane-to-bottom
 			JScrollBar vert = m_scrollPane.getVerticalScrollBar();
 			
@@ -292,23 +299,30 @@ public class JListTestFrame extends JFrame {
 				{
 					break ;
 				}
-
-				m_listModel.addElement(sLog);
 				
-				int iSize = m_listModel.getSize() ;
+				int iSize = 0 ;
+				m_listModel.ensureCapacity(iSize + 1);
+				m_listModel..addElement(sLog);
+				iSize = m_listModel.getSize() ;
+				
 				if (iSize + 1 >= m_ilistModelMax)
 				{
 					//pop the first element off.
-					m_listModel.remove (0) ;
+					//m_listModel.remove (0) ;
+					m_listModel.removeElementAt(0);
 				}
 				iNumFlushed++ ;
 			}
 			iListSize = m_list.getModel().getSize() ;
-			
-			if (iNumFlushed > 0)
+
+			/*
+			while (m_listModel.getSize() > m_ilistModelMax)
 			{
-				m_list.repaint();
+				//pop the first element off.
+				m_listModel.remove (0) ;
 			}
+			*/
+		
 			
 			if (bAutoScrollDisplay)
 			{
@@ -420,7 +434,7 @@ public class JListTestFrame extends JFrame {
 			    			break ;
 			    		}
 			    		
-			    		Thread.sleep(1);
+			    		Thread.sleep(10);
 			    		//looping in the thread.
 			    		iLoopCount++ ;
 			    		
