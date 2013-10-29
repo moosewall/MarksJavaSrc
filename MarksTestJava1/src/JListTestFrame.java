@@ -34,9 +34,9 @@ public class JListTestFrame extends JFrame {
 	//http://www.seasite.niu.edu/cs580java/JList_Basics.htm
 	//http://docs.oracle.com/javase/7/docs/api/javax/swing/DefaultListModel.html
 	//
-	private DefaultListModel m_listModel;
-	private int m_ilistModelMax = 500 ;
-	private JList m_list = null ;
+	private DefaultListModel<String> m_listModel ;
+	private int m_ilistModelMax = 5000 ;
+	private JList<String> m_list = null ;
 	private JScrollPane m_scrollPane = null ;
 	
 	private JPanel contentPane;
@@ -116,6 +116,25 @@ public class JListTestFrame extends JFrame {
 			}
 		});
 		mnCommands.add(mntmAddLogs);
+		
+		JMenuItem mntmTrickleLogTest = new JMenuItem("Trickle Log Test");
+		mntmTrickleLogTest.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) 
+			{
+				m_cs.Do_TrickleLogTest();
+			}
+		});
+		mnCommands.add(mntmTrickleLogTest);
+
+		JMenuItem mntmClearLogs = new JMenuItem("Clear Logs");
+		mntmClearLogs.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) 
+			{
+				m_cs.Do_ClearLogs();
+			}
+		});
+		mnCommands.add(mntmClearLogs);
+		
 
 		JMenuItem mntmMoveToEndOfLogs = new JMenuItem("Move Log View To End");
 		mntmMoveToEndOfLogs.addActionListener(new ActionListener() {
@@ -189,6 +208,16 @@ public class JListTestFrame extends JFrame {
 			//signal from to close gracefully.
 			m_jfPar.dispatchEvent(new WindowEvent(m_jfPar, WindowEvent.WINDOW_CLOSING));
 		}
+		public void Do_TrickleLogTest ()
+		{
+			String sFN = TraceUtils.sGetFN() ;
+			boolean bTrickleLogTestOn = m_WorkerThread.bToggleTrickleLogTest() ;
+			Log (sFN + " bTrickleLogTestOn == " + bTrickleLogTestOn) ;
+		}
+		public void Do_ClearLogs ()
+		{
+			m_listModel.clear(); 
+		}
 		public void Do_AddLog ()
 		{
 			String sFN = TraceUtils.sGetFN() ;
@@ -223,12 +252,33 @@ public class JListTestFrame extends JFrame {
 			{
 				vert.setValue(iPosWanted);
 			}
+			/*attempt at flushing display
+			if (m_listModel.size() > 0)
+			{
+				m_listModel.add(0, "");
+				m_listModel.remove(0) ;
+			}
+			*/
 			/*
-			m_list.setSelectedIndex(m_listModel.getSize() - 1);
+			int iSize = m_list.getModel().getSize() ;
+			if (iSize > 0)
+			{
+				m_list.ensureIndexIsVisible(iSize-1);
+			}
 			*/
 		}
 		void FlushLogs ()
 		{
+			boolean bAutoScrollDisplay = true ;
+			int iSel = m_list.getSelectedIndex() ;
+			int iListSize = m_list.getModel().getSize() ; 
+			
+			if (   iSel != -1
+				&& (iSel + 1) < iListSize)
+			{
+				bAutoScrollDisplay = false ;
+			}
+
 			int iMaxFlush = 100 ;
 			int iNumFlushed = 0 ;
 			while (true)
@@ -253,6 +303,22 @@ public class JListTestFrame extends JFrame {
 				}
 				iNumFlushed++ ;
 			}
+			iListSize = m_list.getModel().getSize() ;
+			
+			if (iNumFlushed > 0)
+			{
+				m_list.repaint();
+			}
+			
+			if (bAutoScrollDisplay)
+			{
+				if (   iSel != -1
+				    && iListSize > 0)
+				{
+					m_list.setSelectedIndex(iListSize - 1);
+				}
+				SetListToEnd () ;
+			}
 		}
 		void Log (String sLog)
 		{
@@ -263,37 +329,32 @@ public class JListTestFrame extends JFrame {
 			String sFullLog = sDate + " " + sLog ;
 			
 			m_Logs.Log (sFullLog) ;
-			/*add to queue
-			m_listModel.addElement(sFullLog);
-			
-			int iSize = m_listModel.getSize() ;
-			if (iSize > m_ilistModelMax)
-			{
-				//pop the first element off.
-				m_listModel.remove (0) ;
-			}
-		
-			//SetListToEnd () ;
-			 
-			 */
 		}
 		//////////////////////////////////
 		//
 		public class Logs
 		{
 			private List<String> m_lstLogs = new ArrayList<String>();
-			public synchronized void Log (String sLog)
+			public void Log (String sLog)
 			{
-				m_lstLogs.add(sLog) ;
+				synchronized (m_lstLogs)
+				{
+					m_lstLogs.add(sLog) ;
+				}
 			}
-			public synchronized String sGetLog ()
+			public String sGetLog ()
 			{
 				String sr = "" ;
-				if (m_lstLogs.size() > 0)
+				
+				synchronized (m_lstLogs)
 				{
-					sr = m_lstLogs.get(0) ;
-					m_lstLogs.remove(0) ;
+					if (m_lstLogs.size() > 0)
+					{
+						sr = m_lstLogs.get(0) ;
+						m_lstLogs.remove(0) ;
+					}
 				}
+				
 				return sr ;
 			}
 		}
@@ -304,6 +365,7 @@ public class JListTestFrame extends JFrame {
 		//
 		public class BackGroundThread extends Thread 
 		{
+			/////
 			private boolean m_bDoShutdown = false ;
 			public synchronized void SignalShutdown ()
 			{
@@ -313,12 +375,31 @@ public class JListTestFrame extends JFrame {
 			{
 				return m_bDoShutdown ;
 			}
+			
+			/////
+			private boolean m_bTrickleLogTestOn = false ;
+			private Date m_dtTrickleLogTest_LastTime = new Date () ;
+			private int m_iTrickleLogTest_IntervalSeconds = 2 ; 
+			public synchronized boolean bToggleTrickleLogTest ()
+			{
+				if (m_bTrickleLogTestOn)
+				{
+					m_bTrickleLogTestOn = false ;
+				}
+				else
+				{
+					m_bTrickleLogTestOn = true ;
+				}
+				return m_bTrickleLogTestOn ;
+			}
+			
 			public void StopThread ()
 			{
 				SignalShutdown () ;
 				while (isAlive()) ;
 			}
-			
+			/////////////////////////////////////////////////
+			//
 		    public void run() 
 		    {
 		    	String sFN = TraceUtils.sGetFN() ;
@@ -331,6 +412,8 @@ public class JListTestFrame extends JFrame {
 			    	int iLoopCount = 0 ;
 			    	while (true)
 			    	{
+			    		Date dtCur = new Date();
+			    		
 			    		if (bDoShutdown())
 			    		{
 			    			//exit loop to shutdown.
@@ -341,6 +424,17 @@ public class JListTestFrame extends JFrame {
 			    		//looping in the thread.
 			    		iLoopCount++ ;
 			    		
+			    		if (this.m_bTrickleLogTestOn)
+			    		{
+			    			//http://stackoverflow.com/questions/635935/how-can-i-calculate-a-time-span-in-java-and-format-the-output
+			    			long lNumSecsSinceLastTrickle = (dtCur.getTime() - this.m_dtTrickleLogTest_LastTime.getTime()) / 1000 ;
+			    			if (lNumSecsSinceLastTrickle >= m_iTrickleLogTest_IntervalSeconds)
+			    			{
+			    				Log (sFN + " new trickle log test log") ;
+			    				m_dtTrickleLogTest_LastTime = new Date () ;
+			    			}
+			    		}
+			    		
 			    		if ((iLoopCount % 1000)==0)
 			    		{
 			    			sLog = String.format("%s,  %d times",
@@ -350,7 +444,9 @@ public class JListTestFrame extends JFrame {
 			    		}
 			    		
 			    		FlushLogs () ;
+			    		/*do in FlushLogs
 		    			SetListToEnd () ;
+		    			*/
 			    	}
 		    	}
 		    	catch (Exception exp)
@@ -362,7 +458,8 @@ public class JListTestFrame extends JFrame {
 		    		TraceUtils.Trc(sLog);
 		    	}
 		    }
-
+		    /////////////////////////////////////////
+		    //
 		    public void startMe() 
 		    {
 		    	this.start () ;
