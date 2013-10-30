@@ -47,6 +47,7 @@ import javax.swing.SwingConstants;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
+import java.awt.Toolkit;
 
 public class JTemplateCopy_AppWin 
 {
@@ -64,9 +65,9 @@ public class JTemplateCopy_AppWin
 	//http://www.seasite.niu.edu/cs580java/JList_Basics.htm
 	//http://docs.oracle.com/javase/7/docs/api/javax/swing/DefaultListModel.html
 	//
-	private DefaultListModel m_listModel;
+	private DefaultListModel <String> m_listModel;
 	private int m_ilistModelMax = 500 ;
-	private JList m_list = null ;
+	private JList <String> m_list = null ;
 	private JScrollPane m_scrollPane = null ;
 	private JLabel m_lblStatus = null ;
 	private String m_sStatusDefault = "Ready" ;
@@ -88,9 +89,20 @@ public class JTemplateCopy_AppWin
 			public void run() {
 				try 
 				{
+					/*
+					//default
+					UIManager.setLookAndFeel
+					 (UIManager.getCrossPlatformLookAndFeelClassName());
+					 */
+					
+					//Current OS look and feel.  When running on
+					//windows, looks windows like.  cool!
+					//
+					UIManager.setLookAndFeel
+					 (UIManager.getSystemLookAndFeelClassName());
+					
 					JTemplateCopy_AppWin window = new JTemplateCopy_AppWin();
 			
-				
 					window.m_Frame.setVisible(true);
 					
 					
@@ -106,7 +118,6 @@ public class JTemplateCopy_AppWin
 	public JTemplateCopy_AppWin() {
 		initialize();
 	}
-
 	/**
 	 * Initialize the contents of the frame.
 	 */
@@ -125,6 +136,7 @@ public class JTemplateCopy_AppWin
 		//////////////////////////
 		
 		m_Frame = new JFrame();
+		m_Frame.setIconImage(Toolkit.getDefaultToolkit().getImage(JTemplateCopy_AppWin.class.getResource("/com/sun/java/swing/plaf/motif/icons/DesktopIcon.gif")));
 		m_Frame.addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent arg0) 
@@ -150,7 +162,7 @@ public class JTemplateCopy_AppWin
 			}
 		});
 		mnFile.add(mntmExit);
-		
+
 		JMenu mnCommands = new JMenu("Commands");
 		menuBar.add(mnCommands);
 		JMenuItem mntmCloneGenericProject = new JMenuItem("Clone Generic Project");
@@ -424,6 +436,17 @@ public class JTemplateCopy_AppWin
 			m_list.setSelectedIndex(m_listModel.getSize() - 1);
 			*/
 		}
+		/////////////////////////
+		//Force JList refresh.
+		//
+		void ForceListRefresh ()
+		{
+			//Trick to ensure the JList doesn't go blank.
+			m_list.setVisible(false);
+			m_listModel.addElement(""); //add a dummy element to end.
+			m_listModel.removeElementAt(m_listModel.getSize()-1); //remove dummy element
+			m_list.setVisible(true);
+		}
 		void FlushLogs ()
 		{
 			int iMaxFlush = 100 ;
@@ -449,6 +472,11 @@ public class JTemplateCopy_AppWin
 					m_listModel.remove (0) ;
 				}
 				iNumFlushed++ ;
+			}
+			
+			if (iNumFlushed > 0)
+			{
+				ForceListRefresh () ;
 			}
 		}
 		void Log (String sLog)

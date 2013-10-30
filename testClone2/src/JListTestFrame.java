@@ -2,7 +2,6 @@
 
 import java.awt.BorderLayout;
 import java.awt.EventQueue;
-import java.awt.Toolkit;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -18,11 +17,8 @@ import javax.swing.ListModel;
 import javax.swing.SwingWorker;
 import javax.swing.UIManager;
 
-import java.awt.datatransfer.Clipboard;
-import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
-import java.awt.event.MouseListener;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -34,12 +30,6 @@ import javax.swing.ScrollPaneConstants;
 
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-
-import javax.swing.JPopupMenu;
-
-import java.awt.Component;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 
 /*
 
@@ -59,9 +49,6 @@ public class JListTestFrame extends JFrame {
 	private JScrollPane m_scrollPane = null ;
 	
 	private JPanel contentPane;
-	
-	//http://docs.oracle.com/javase/tutorial/uiswing/components/menu.html
-	private JPopupMenu m_popup;
 
 	/**
 	 * Launch the application.
@@ -128,17 +115,6 @@ public class JListTestFrame extends JFrame {
 		});
 		mnFile.add(mntmExit);
 
-		JMenu mnEdit = new JMenu("Edit");
-		menuBar.add(mnEdit);
-		JMenuItem mntmCopyToClipBoard = new JMenuItem("Copy To Clipboard");
-		mntmCopyToClipBoard.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) 
-			{
-				m_cs.Do_CopyToClipboard();
-			}
-		});
-		mnEdit.add(mntmCopyToClipBoard);
-		
 		///
 		JMenu mnCommands = new JMenu("Commands");
 		menuBar.add(mnCommands);
@@ -214,47 +190,10 @@ public class JListTestFrame extends JFrame {
 		m_scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
 		m_scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
 		contentPane.add(m_scrollPane, BorderLayout.CENTER);
-
-		
-		////////////////////
-		//Create the popup menu.
-	    m_popup = new JPopupMenu();
-	    JMenuItem menuItem = null ;
-	    menuItem = new JMenuItem("Copy To Clipboard");
-	    menuItem.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) 
-			{
-				m_cs.Do_CopyToClipboard();
-			}
-		});
-	    m_popup.add(menuItem);
-
-	    //Add listener to components that can bring up popup menus.
-	    MouseListener popupListener = new PopupListener();
-	    //m_scrollPane.addMouseListener(popupListener);
-	    //this.addMouseListener(popupListener);
-	    m_list.addMouseListener(popupListener);
-		
-		
+	
 		//background thread.
 		m_cs.StartWinApp(); 
 	}
-	class PopupListener extends MouseAdapter {
-	    public void mousePressed(MouseEvent e) {
-	        maybeShowPopup(e);
-	    }
-
-	    public void mouseReleased(MouseEvent e) {
-	        maybeShowPopup(e);
-	    }
-
-	    private void maybeShowPopup(MouseEvent e) {
-	        if (e.isPopupTrigger()) {
-	            m_popup.show(e.getComponent(),
-	                       e.getX(), e.getY());
-	        }
-	    }
-	}	
 	////////////////////////////////////////
 	//
 	private class CustomStuff
@@ -291,28 +230,6 @@ public class JListTestFrame extends JFrame {
 			*/
 			//signal from to close gracefully.
 			m_jfPar.dispatchEvent(new WindowEvent(m_jfPar, WindowEvent.WINDOW_CLOSING));
-		}
-		public void Do_CopyToClipboard ()
-		{
-			String sFN = TraceUtils.sGetFN() ;
-			
-			String sEol = BufUtils.sGetEol() ;
-			String sSelAll = "" ;
-			
-			int [] iaSelIs = m_list.getSelectedIndices() ;
-			for (int iSelI = 0; iSelI < iaSelIs.length; iSelI++)
-			{
-				int iSel = iaSelIs[iSelI] ;
-				String sSel = m_listModel.get(iSel) ;
-				if (sSelAll.equals("") == false)
-				{
-					sSelAll += sEol ;
-				}
-				sSelAll += sSel ;
-			}
-			StringSelection stringSelection = new StringSelection (sSelAll);
-			Clipboard clpbrd = Toolkit.getDefaultToolkit ().getSystemClipboard ();
-			clpbrd.setContents (stringSelection, null);			
 		}
 		public void Do_TrickleLogTest ()
 		{
@@ -708,23 +625,6 @@ public class JListTestFrame extends JFrame {
 	} //class CustomStuff def
 	private CustomStuff m_cs = new CustomStuff (this) ;
 	
-	private static void addPopup(Component component, final JPopupMenu popup) {
-		component.addMouseListener(new MouseAdapter() {
-			public void mousePressed(MouseEvent e) {
-				if (e.isPopupTrigger()) {
-					showMenu(e);
-				}
-			}
-			public void mouseReleased(MouseEvent e) {
-				if (e.isPopupTrigger()) {
-					showMenu(e);
-				}
-			}
-			private void showMenu(MouseEvent e) {
-				popup.show(e.getComponent(), e.getX(), e.getY());
-			}
-		});
-	}
 }
 
 

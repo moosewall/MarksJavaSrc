@@ -15,6 +15,7 @@ import javax.swing.JTextField;
 
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
+import java.awt.Toolkit;
 
 
 public class GetDirDlg extends JDialog 
@@ -44,6 +45,8 @@ public class GetDirDlg extends JDialog
 			ProgUtils.MsgBox(sw.toString()); // stack trace as a string			
 		}
 	}
+	
+	private static String m_sLastDir = "" ;
 	public static String sBrowseDir (String sStartingDir)
 	{
 		return sBrowseDir (sStartingDir, "", null) ;
@@ -60,6 +63,12 @@ public class GetDirDlg extends JDialog
 			
 			GetDirDlg dialog = new GetDirDlg() ;
 			dialog.m_sDir = sStartingDir ;
+			
+			if (dialog.m_sDir.equals(""))
+			{
+				dialog.m_sDir = m_sLastDir ;
+			}
+			
 			dialog.DataToControls();
 			
 			dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
@@ -81,6 +90,8 @@ public class GetDirDlg extends JDialog
 			{
 				//Dialog OKed, result is dialog.m_sDir
 				sr = dialog.m_sDir ;
+				
+				m_sLastDir = sr ;
 			}
 			else
 			{
@@ -141,6 +152,7 @@ public class GetDirDlg extends JDialog
 	 */
 	public GetDirDlg() 
 	{
+		setIconImage(Toolkit.getDefaultToolkit().getImage(GetDirDlg.class.getResource("/com/sun/java/swing/plaf/windows/icons/Directory.gif")));
 		setTitle("Select Directory");
 		setBounds(100, 100, 450, 164);
 		getContentPane().setLayout(new BorderLayout());
