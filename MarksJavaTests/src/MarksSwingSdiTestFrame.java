@@ -48,7 +48,7 @@ blank.  ForceListRefresh() seems to work around the issue.
 
 /* */
 
-public class JListTestFrame extends JFrame {
+public class MarksSwingSdiTestFrame extends JFrame {
 
 	//http://www.seasite.niu.edu/cs580java/JList_Basics.htm
 	//http://docs.oracle.com/javase/7/docs/api/javax/swing/DefaultListModel.html
@@ -83,7 +83,7 @@ public class JListTestFrame extends JFrame {
 					UIManager.setLookAndFeel
 					 (UIManager.getSystemLookAndFeelClassName());
 					
-					JListTestFrame frame = new JListTestFrame();
+					MarksSwingSdiTestFrame frame = new MarksSwingSdiTestFrame();
 					frame.setVisible(true);
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -95,7 +95,7 @@ public class JListTestFrame extends JFrame {
 	/**
 	 * Create the frame.
 	 */
-	public JListTestFrame() 
+	public MarksSwingSdiTestFrame() 
 	{
 		addWindowListener(new WindowAdapter() {
 			@Override
@@ -249,7 +249,8 @@ public class JListTestFrame extends JFrame {
 	    }
 
 	    private void maybeShowPopup(MouseEvent e) {
-	        if (e.isPopupTrigger()) {
+	        if (e.isPopupTrigger()) 
+	        {
 	            m_popup.show(e.getComponent(),
 	                       e.getX(), e.getY());
 	        }

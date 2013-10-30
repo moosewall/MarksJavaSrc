@@ -7,9 +7,12 @@ import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 import javax.swing.JDesktopPane;
 import javax.swing.JInternalFrame;
+import javax.swing.JMenu;
+import javax.swing.JMenuItem;
+import javax.swing.JMenuBar;
 
 
-public class JMdiTest extends JFrame {
+public class MarksSwingMdiTest extends JFrame {
 
 	private JPanel contentPane;
 
@@ -20,7 +23,7 @@ public class JMdiTest extends JFrame {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
-					JMdiTest frame = new JMdiTest();
+					MarksSwingMdiTest frame = new MarksSwingMdiTest();
 					frame.setVisible(true);
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -33,7 +36,7 @@ public class JMdiTest extends JFrame {
 	 * Create the frame.
 	 * @throws Exception 
 	 */
-	public JMdiTest() throws Exception {
+	public MarksSwingMdiTest() throws Exception {
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 450, 300);
 		contentPane = new JPanel();
@@ -44,14 +47,22 @@ public class JMdiTest extends JFrame {
 		JDesktopPane desktopPane = new JDesktopPane();
 		contentPane.add(desktopPane, BorderLayout.CENTER);
 		
-		JInternalFrame internalFrame = new JInternalFrame("New JInternalFrame");
-		internalFrame.setClosable(true);
+		JInternalFrame internalFrame = new JInternalFrame("Real Time Logs");
 		internalFrame.setResizable(true);
 		internalFrame.setMaximizable(true);
 		internalFrame.setIconifiable(true);
 		internalFrame.setIcon(true);
-		internalFrame.setBounds(10, 11, 175, 147);
+		internalFrame.setBounds(10, 11, 175, 209);
 		desktopPane.add(internalFrame);
+		
+		JMenuBar menuBar = new JMenuBar();
+		contentPane.add(menuBar, BorderLayout.NORTH);
+		
+		JMenu mnFile = new JMenu("File");
+		menuBar.add(mnFile);
+		
+		JMenuItem mntmExit = new JMenuItem("Exit");
+		mnFile.add(mntmExit);
 		internalFrame.setVisible(true);
 	}
 }
