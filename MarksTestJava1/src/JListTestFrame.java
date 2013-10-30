@@ -14,6 +14,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JMenu;
 import javax.swing.JScrollBar;
 import javax.swing.ListModel;
+import javax.swing.SwingWorker;
 
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
@@ -29,6 +30,12 @@ import javax.swing.ScrollPaneConstants;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
+/*
+
+10/30/13, Still working an issue where is the "many logs" option is used, the JList goes
+blank.  ForceListRefresh() seems to work around the issue.  
+
+/* */
 
 public class JListTestFrame extends JFrame {
 
@@ -186,12 +193,14 @@ public class JListTestFrame extends JFrame {
 		
 		public void StartWinApp ()
 		{
+			//m_BackgroundTasks = new MyBackgroundTasks () ;
 			m_WorkerThread.start () ;
 			LogStartupSum () ;
 		}
 		public void ShutdownWinApp ()
 		{
 			m_WorkerThread.StopThread () ;
+			//m_BackgroundTasks.bDoShutdown() ;
 		}
 
 		private void LogStartupSum ()
@@ -213,6 +222,7 @@ public class JListTestFrame extends JFrame {
 		{
 			String sFN = TraceUtils.sGetFN() ;
 			boolean bTrickleLogTestOn = m_WorkerThread.bToggleTrickleLogTest() ;
+			//boolean bTrickleLogTestOn = m_BackgroundTasks.bToggleTrickleLogTest() ;
 			Log (sFN + " bTrickleLogTestOn == " + bTrickleLogTestOn) ;
 		}
 		public void Do_ClearLogs ()
@@ -274,12 +284,24 @@ public class JListTestFrame extends JFrame {
 			}
 			*/
 		}
+		/////////////////////////
+		//Force JList refresh.
+		//
+		void ForceListRefresh ()
+		{
+			//Trick to ensure the JList doesn't go blank.
+			m_list.setVisible(false);
+			m_listModel.addElement(""); //add a dummy element to end.
+			m_listModel.removeElementAt(m_listModel.getSize()-1); //remove dummy element
+			m_list.setVisible(true);
+		}
 		void FlushLogs ()
 		{
 			boolean bAutoScrollDisplay = true ;
 			int iSel = m_list.getSelectedIndex() ;
-			int iListSize = m_list.getModel().getSize() ; 
+			int iListSize = m_list.getModel().getSize() ;
 			
+		
 			if (   iSel != -1
 				&& (iSel + 1) < iListSize)
 			{
@@ -301,8 +323,7 @@ public class JListTestFrame extends JFrame {
 				}
 				
 				int iSize = 0 ;
-				m_listModel.ensureCapacity(iSize + 1);
-				m_listModel..addElement(sLog);
+				m_listModel.addElement(sLog);
 				iSize = m_listModel.getSize() ;
 				
 				if (iSize + 1 >= m_ilistModelMax)
@@ -332,6 +353,11 @@ public class JListTestFrame extends JFrame {
 					m_list.setSelectedIndex(iListSize - 1);
 				}
 				SetListToEnd () ;
+			}
+			
+			if (iNumFlushed > 0)
+			{
+				ForceListRefresh () ;
 			}
 		}
 		void Log (String sLog)
@@ -372,8 +398,119 @@ public class JListTestFrame extends JFrame {
 				return sr ;
 			}
 		}
-		Logs m_Logs = new Logs () ; 
-				
+		Logs m_Logs = new Logs () ;
+
+		/*Tried to replace Background thread with SwingWorker, still get refresh issue.
+		//////////////////////////////////
+		//
+		public class MyBackgroundTasks
+		{
+			public MyBackgroundTasks ()
+			{
+				m_SwingWorker.execute();
+			}
+			/////
+			private boolean m_bDoShutdown = false ;
+			public synchronized void SignalShutdown ()
+			{
+				m_bDoShutdown = true ;
+			}
+			public synchronized boolean bDoShutdown ()
+			{
+				return m_bDoShutdown ;
+			}
+			
+			/////
+			private boolean m_bTrickleLogTestOn = false ;
+			private Date m_dtTrickleLogTest_LastTime = new Date () ;
+			private int m_iTrickleLogTest_IntervalSeconds = 2 ; 
+			public synchronized boolean bToggleTrickleLogTest ()
+			{
+				if (m_bTrickleLogTestOn)
+				{
+					m_bTrickleLogTestOn = false ;
+				}
+				else
+				{
+					m_bTrickleLogTestOn = true ;
+				}
+				return m_bTrickleLogTestOn ;
+			}
+			
+
+			SwingWorker m_SwingWorker = new SwingWorker<Void, Void>() {
+			    @Override
+			    public Void doInBackground() 
+			    {
+			    	Void vr = null ;
+			    	
+			    	String sFN = TraceUtils.sGetFN() ;
+			        //System.out.println("Hello from a thread!");
+			    	
+			    	String sLog = "" ;
+			    	
+			    	try
+			    	{
+				    	int iLoopCount = 0 ;
+				    	while (true)
+				    	{
+				    		Date dtCur = new Date();
+				    		
+				    		if (bDoShutdown())
+				    		{
+				    			//exit loop to shutdown.
+				    			break ;
+				    		}
+				    		
+				    		Thread.sleep(10);
+				    		
+				    		if (m_bTrickleLogTestOn)
+				    		{
+				    			//http://stackoverflow.com/questions/635935/how-can-i-calculate-a-time-span-in-java-and-format-the-output
+				    			long lNumSecsSinceLastTrickle = (dtCur.getTime() - m_dtTrickleLogTest_LastTime.getTime()) / 1000 ;
+				    			if (lNumSecsSinceLastTrickle >= m_iTrickleLogTest_IntervalSeconds)
+				    			{
+				    				Log (sFN + " new trickle log test log") ;
+				    				m_dtTrickleLogTest_LastTime = new Date () ;
+				    			}
+				    		}
+				    		
+				    		//looping in the thread.
+				    		iLoopCount++ ;
+				    		
+				    		if ((iLoopCount % 1000)==0)
+				    		{
+				    			sLog = String.format("%s,  %d times",
+				    					sFN,
+				    					iLoopCount) ;
+				    			//Log (sLog) ;
+				    		}
+				    		
+				    		FlushLogs () ;
+				    	}
+			    	}
+			    	catch (Exception exp)
+			    	{
+			    		//exception raised.
+			    		sLog = String.format ("%s, exception %s",
+			    				sFN,
+			    				exp.getMessage()) ;
+			    		TraceUtils.Trc(sLog);
+			    	}			    	
+			    	
+			    	return vr ;
+			    }
+
+			    @Override
+			    public void done() 
+			    {
+			    }
+			};
+			
+		}
+		public MyBackgroundTasks m_BackgroundTasks = null ;
+		/* */
+	
 		//////////////////////////////////
 		//http://docs.oracle.com/javase/tutorial/essential/concurrency/runthread.html
 		//
@@ -458,9 +595,6 @@ public class JListTestFrame extends JFrame {
 			    		}
 			    		
 			    		FlushLogs () ;
-			    		/*do in FlushLogs
-		    			SetListToEnd () ;
-		    			*/
 			    	}
 		    	}
 		    	catch (Exception exp)
