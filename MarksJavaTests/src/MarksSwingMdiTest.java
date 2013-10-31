@@ -11,7 +11,12 @@ import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JMenuBar;
 
+/*
 
+How to use internal frames
+http://docs.oracle.com/javase/tutorial/uiswing/components/internalframe.html
+
+/*  */
 public class MarksSwingMdiTest extends JFrame {
 
 	private JPanel contentPane;
