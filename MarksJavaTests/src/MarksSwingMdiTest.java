@@ -1,11 +1,18 @@
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.Graphics;
 import java.awt.Rectangle;
+import java.awt.Toolkit;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.beans.PropertyVetoException;
@@ -27,6 +34,7 @@ import javax.swing.JList;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JMenuBar;
+import javax.swing.JPopupMenu;
 import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 import javax.swing.ScrollPaneConstants;
@@ -57,6 +65,8 @@ public class MarksSwingMdiTest extends JFrame {
 	private JDesktopPane m_desk = null ;
 	private JInternalFrame m_jifRealTimeLogs = null ;
 	
+	//http://docs.oracle.com/javase/tutorial/uiswing/components/menu.html
+	private JPopupMenu m_popup;
 
 	/**
 	 * Launch the application.
@@ -119,7 +129,7 @@ public class MarksSwingMdiTest extends JFrame {
                  "Real Time Logs", true, true, true, true );
 		MyJPanel panel = new MyJPanel () ;
 		m_jifRealTimeLogs.add(panel, BorderLayout.CENTER) ;
-		m_jifRealTimeLogs.pack () ;
+		//m_jifRealTimeLogs.pack () ; //this minimizes i.e. iconifies
 		m_desk.add(m_jifRealTimeLogs) ;
 		m_jifRealTimeLogs.setVisible(true);
 		m_jifRealTimeLogs.setMaximum(true);
@@ -144,14 +154,113 @@ public class MarksSwingMdiTest extends JFrame {
 		});
 		mnFile.add(mntmExit);
 		
+		///
+		JMenu mnCommands = new JMenu("Commands");
+		menuBar.add(mnCommands);
+		
+		JMenuItem mntmAddLog = new JMenuItem("Add Log");
+		mntmAddLog.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) 
+			{
+				m_cs.Do_AddLog(); 
+			}
+		});
+		mnCommands.add(mntmAddLog);
+		
+		menuBar.add(mnCommands);
+		
+		JMenuItem mntmAddLogs = new JMenuItem("Add Many Logs");
+		mntmAddLogs.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) 
+			{
+				m_cs.Do_AddLogs();
+			}
+		});
+		mnCommands.add(mntmAddLogs);
+		
+		JMenuItem mntmTrickleLogTest = new JMenuItem("Trickle Log Test");
+		mntmTrickleLogTest.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) 
+			{
+				m_cs.Do_TrickleLogTest();
+			}
+		});
+		mnCommands.add(mntmTrickleLogTest);
+
+		JMenuItem mntmClearLogs = new JMenuItem("Clear Logs");
+		mntmClearLogs.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) 
+			{
+				m_cs.Do_ClearLogs();
+			}
+		});
+		mnCommands.add(mntmClearLogs);
+		
+
+		JMenuItem mntmMoveToEndOfLogs = new JMenuItem("Move Log View To End");
+		mntmMoveToEndOfLogs.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) 
+			{
+				m_cs.Do_MoveToEndOfLogs();
+			}
+		});
+		mnCommands.add(mntmMoveToEndOfLogs);
+		////////////////////
+		
+		//////////////////
+		//"Windows" options
 		JMenu mnWindow = new JMenu("Window");
 		menuBar.add(mnWindow);
 		
-		JMenuItem mntmNewMenuItem = new JMenuItem("New menu item");
-		mnWindow.add(mntmNewMenuItem);
+		JMenuItem mntmCascadeWindows = new JMenuItem("Cascade");
+		mntmCascadeWindows.addActionListener(new ActionListener()
+		{
+			public void actionPerformed(ActionEvent e)
+			{
+				String sFN = TraceUtils.sGetFN() ;
+				boolean bTrickleLogTestOn = m_cs.m_WorkerThread.bToggleTrickleLogTest() ;
+			}
+		});
+		mnWindow.add(mntmCascadeWindows);
+		//////////////////
+		
+		////////////////////
+		//Create the popup menu.
+	    m_popup = new JPopupMenu();
+	    JMenuItem menuItem = null ;
+	    menuItem = new JMenuItem("Copy To Clipboard");
+	    menuItem.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) 
+			{
+				m_cs.Do_CopyToClipboard();
+			}
+		});
+	    m_popup.add(menuItem);
+
+	    //Add listener to components that can bring up popup menus.
+	    MouseListener popupListener = new PopupListener();
+	    m_cs.m_rtlm.m_list.addMouseListener(popupListener);
 		
 		m_cs.StartWinApp();
 	}
+	class PopupListener extends MouseAdapter {
+	    public void mousePressed(MouseEvent e) {
+	        maybeShowPopup(e);
+	    }
+
+	    public void mouseReleased(MouseEvent e) {
+	        maybeShowPopup(e);
+	    }
+
+	    private void maybeShowPopup(MouseEvent e) {
+	        if (e.isPopupTrigger()) 
+	        {
+	            m_popup.show(e.getComponent(),
+	                       e.getX(), e.getY());
+	        }
+	    }
+	}	
+	
 	// class to display an ImageIcon on a panel
 	private CustomStuff m_cs = new CustomStuff () ;
 	public class CustomStuff
@@ -173,19 +282,74 @@ public class MarksSwingMdiTest extends JFrame {
 		private void LogStartupSum ()
 		{
 			Log ("Program Started") ;
-			Log ("Demos JList and JMenu") ;
+			Log ("Demos MDI java app") ;
 		}
 		public void Close ()
 		{
-			/*
-			m_WorkerThread.StopThread();
-			setVisible (false) ;
-			dispose () ;
-			*/
 			//signal from to close gracefully.
 			m_jfPar.dispatchEvent(new WindowEvent(m_jfPar, WindowEvent.WINDOW_CLOSING));
 		}
-		
+		public void Do_CopyToClipboard ()
+		{
+			String sFN = TraceUtils.sGetFN() ;
+			
+			String sEol = BufUtils.sGetEol() ;
+			String sSelAll = "" ;
+			
+			int [] iaSelIs = m_rtlm.m_list.getSelectedIndices() ;
+			for (int iSelI = 0; iSelI < iaSelIs.length; iSelI++)
+			{
+				int iSel = iaSelIs[iSelI] ;
+				String sSel = m_rtlm.m_listModel.get(iSel) ;
+				if (sSelAll.equals("") == false)
+				{
+					sSelAll += sEol ;
+				}
+				sSelAll += sSel ;
+			}
+			StringSelection stringSelection = new StringSelection (sSelAll);
+			Clipboard clpbrd = Toolkit.getDefaultToolkit ().getSystemClipboard ();
+			clpbrd.setContents (stringSelection, null);			
+		}
+		public void Do_TrickleLogTest ()
+		{
+			String sFN = TraceUtils.sGetFN() ;
+			boolean bTrickleLogTestOn = m_WorkerThread.bToggleTrickleLogTest() ;
+			//boolean bTrickleLogTestOn = m_BackgroundTasks.bToggleTrickleLogTest() ;
+			Log (sFN + " bTrickleLogTestOn == " + bTrickleLogTestOn) ;
+		}
+		public void Do_ClearLogs ()
+		{
+			m_rtlm.m_listModel.clear(); 
+		}
+		public void Do_AddLog ()
+		{
+			String sFN = TraceUtils.sGetFN() ;
+			Log (sFN + " testing new log add") ;
+		}
+		public void Do_AddLogs ()
+		{
+			String sFN = TraceUtils.sGetFN() ;
+			
+			String sLog = "" ;
+			
+			for (int iLog = 0; iLog < 600; iLog++)
+			{
+				sLog = String.format("%s, Test Log %d", sFN, iLog + 1) ;
+				Log (sLog) ;
+			}
+		}
+		public void Do_MoveToEndOfLogs ()
+		{
+			String sFN = TraceUtils.sGetFN() ;
+
+			int iListSize = m_rtlm.m_listModel.size() ;
+			if (iListSize > 0)
+			{
+				m_rtlm.m_list.setSelectedIndex(iListSize - 1);
+			}
+			m_rtlm.SetListToEnd () ;
+		}
 		public RealTimeLogFrameMgr m_rtlm = null ;
 		public class RealTimeLogFrameMgr
 		{
@@ -223,6 +387,8 @@ public class MarksSwingMdiTest extends JFrame {
 				m_scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
 				m_scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
 				m_contentPane.add(m_scrollPane, BorderLayout.CENTER);
+				
+				
 				
 			}
 			void SetListToEnd ()
@@ -468,9 +634,28 @@ public class MarksSwingMdiTest extends JFrame {
 		    }
 
 		}
-		private BackGroundThread m_WorkerThread = new BackGroundThread () ;
+		public BackGroundThread m_WorkerThread = new BackGroundThread () ;
 		
 	} //class CustomStuff
+	
+	private static void addPopup(Component component, final JPopupMenu popup) {
+		component.addMouseListener(new MouseAdapter() {
+			public void mousePressed(MouseEvent e) {
+				if (e.isPopupTrigger()) {
+					showMenu(e);
+				}
+			}
+			public void mouseReleased(MouseEvent e) {
+				if (e.isPopupTrigger()) {
+					showMenu(e);
+				}
+			}
+			private void showMenu(MouseEvent e) {
+				popup.show(e.getComponent(), e.getX(), e.getY());
+			}
+		});
+	}
+	
 } //public class MarksSwingMdiTest extends JFrame {
 
 
