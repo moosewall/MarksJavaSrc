@@ -10,7 +10,7 @@
 .metadata
 
 #MW, include this
-#bin/
+# bin/
 
 tmp/
 *.tmp
