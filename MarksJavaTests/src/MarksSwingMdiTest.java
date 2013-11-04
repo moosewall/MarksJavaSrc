@@ -122,9 +122,12 @@ public class MarksSwingMdiTest extends JFrame {
 		m_jifRealTimeLogs.pack () ;
 		m_desk.add(m_jifRealTimeLogs) ;
 		m_jifRealTimeLogs.setVisible(true);
+		m_jifRealTimeLogs.setMaximum(true);
+		m_jifRealTimeLogs.setClosable(false);  //real time logs always up
 		
-		m_cs.m_rtlm = new CustomStuff.RealTimeLogFrameMgr(m_jifRealTimeLogs) ;
-
+		//how to make a new inner class
+		//http://stackoverflow.com/questions/70324/java-inner-class-and-static-nested-class
+		m_cs.m_rtlm = m_cs.new RealTimeLogFrameMgr(m_jifRealTimeLogs) ;
 		
 		JMenuBar menuBar = new JMenuBar();
 		m_contentPane.add(menuBar, BorderLayout.NORTH);
@@ -147,11 +150,11 @@ public class MarksSwingMdiTest extends JFrame {
 		JMenuItem mntmNewMenuItem = new JMenuItem("New menu item");
 		mnWindow.add(mntmNewMenuItem);
 		
-		
+		m_cs.StartWinApp();
 	}
 	// class to display an ImageIcon on a panel
 	private CustomStuff m_cs = new CustomStuff () ;
-	public static class CustomStuff
+	public class CustomStuff
 	{
 		public JFrame m_jfPar = null ;
 		
@@ -184,7 +187,7 @@ public class MarksSwingMdiTest extends JFrame {
 		}
 		
 		public RealTimeLogFrameMgr m_rtlm = null ;
-		public static class RealTimeLogFrameMgr
+		public class RealTimeLogFrameMgr
 		{
 			private DefaultListModel<String> m_listModel ;
 			private int m_ilistModelMax = 5000 ;
@@ -319,7 +322,7 @@ public class MarksSwingMdiTest extends JFrame {
 		
 		} //class RealTimeLogFrameMgr
 		
-		static void Log (String sLog)
+		void Log (String sLog)
 		{
 			DateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
 			Date date = new Date();
@@ -331,7 +334,7 @@ public class MarksSwingMdiTest extends JFrame {
 		}
 		//////////////////////////////////
 		//
-		public static class Logs
+		public class Logs
 		{
 			private List<String> m_lstLogs = new ArrayList<String>();
 			public void Log (String sLog)
@@ -357,12 +360,12 @@ public class MarksSwingMdiTest extends JFrame {
 				return sr ;
 			}
 		}
-		static Logs m_Logs = new Logs () ;
+		Logs m_Logs = new Logs () ;
 		
 		//////////////////////////////////
 		//http://docs.oracle.com/javase/tutorial/essential/concurrency/runthread.html
 		//
-		public static class BackGroundThread extends Thread 
+		public class BackGroundThread extends Thread 
 		{
 			/////
 			private boolean m_bDoShutdown = false ;
@@ -399,7 +402,7 @@ public class MarksSwingMdiTest extends JFrame {
 			}
 			/////////////////////////////////////////////////
 			//
-		    public static void run() 
+		    public void run() 
 		    {
 		    	String sFN = TraceUtils.sGetFN() ;
 		        //System.out.println("Hello from a thread!");
