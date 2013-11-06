@@ -58,12 +58,15 @@ http://stackoverflow.com/questions/9414728/minimizing-jinternal-frame-without-cl
 this person has same problem:
 https://forums.oracle.com/message/6229532
 
+
+http://docs.oracle.com/javase/tutorial/displayCode.html?code=http://docs.oracle.com/javase/tutorial/uiswing/examples/components/InternalFrameDemoProject/src/components/InternalFrameDemo.java
+
 /*  */
 public class MarksSwingMdiTest extends JFrame {
 
 	private JPanel m_contentPane = null;
 	private JDesktopPane m_desk = null ;
-	private JInternalFrame m_jifRealTimeLogs = null ;
+	//private JInternalFrame m_jifRealTimeLogs = null ;
 	
 	//http://docs.oracle.com/javase/tutorial/uiswing/components/menu.html
 	private JPopupMenu m_popup;
@@ -103,6 +106,7 @@ public class MarksSwingMdiTest extends JFrame {
 	 */
 	public MarksSwingMdiTest() throws Exception 
 	{
+		setIconImage(Toolkit.getDefaultToolkit().getImage(MarksSwingMdiTest.class.getResource("/com/sun/java/swing/plaf/motif/icons/DesktopIcon.gif")));
 		addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent arg0) 
@@ -110,9 +114,9 @@ public class MarksSwingMdiTest extends JFrame {
 				m_cs.ShutdownWinApp();
 			}
 		});
-		
-		m_cs.m_jfPar = this ;
-		
+
+		//make help objects
+		m_cs = new CustomStuff (this) ;
 		
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 450, 300);
@@ -125,19 +129,11 @@ public class MarksSwingMdiTest extends JFrame {
 		m_contentPane.add(m_desk, BorderLayout.CENTER);
 		m_desk.setBackground(Color.gray);
 		
-		m_jifRealTimeLogs = new JInternalFrame( 
-                 "Real Time Logs", true, true, true, true );
-		MyJPanel panel = new MyJPanel () ;
-		m_jifRealTimeLogs.add(panel, BorderLayout.CENTER) ;
-		//m_jifRealTimeLogs.pack () ; //this minimizes i.e. iconifies
-		m_desk.add(m_jifRealTimeLogs) ;
-		m_jifRealTimeLogs.setVisible(true);
-		m_jifRealTimeLogs.setMaximum(true);
-		m_jifRealTimeLogs.setClosable(false);  //real time logs always up
-		
+		//m_jifRealTimeLogs = m_cs.jifCreateRealTimeLogsInternalFrame(m_desk) ;
+
 		//how to make a new inner class
 		//http://stackoverflow.com/questions/70324/java-inner-class-and-static-nested-class
-		m_cs.m_rtlm = m_cs.new RealTimeLogFrameMgr(m_jifRealTimeLogs) ;
+		m_cs.m_rtlm = m_cs.new RealTimeLogFrameMgr(this, m_desk) ;
 		
 		JMenuBar menuBar = new JMenuBar();
 		m_contentPane.add(menuBar, BorderLayout.NORTH);
@@ -218,7 +214,14 @@ public class MarksSwingMdiTest extends JFrame {
 			public void actionPerformed(ActionEvent e)
 			{
 				String sFN = TraceUtils.sGetFN() ;
-				boolean bTrickleLogTestOn = m_cs.m_WorkerThread.bToggleTrickleLogTest() ;
+				try {
+					//m_jifRealTimeLogs.setMaximum(true);
+					//m_jifRealTimeLogs.setVisible(true);
+					//m_jifRealTimeLogs.moveToFront();
+				} catch (Exception e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
 			}
 		});
 		mnWindow.add(mntmCascadeWindows);
@@ -262,10 +265,15 @@ public class MarksSwingMdiTest extends JFrame {
 	}	
 	
 	// class to display an ImageIcon on a panel
-	private CustomStuff m_cs = new CustomStuff () ;
+	private CustomStuff m_cs = null ;
 	public class CustomStuff
 	{
-		public JFrame m_jfPar = null ;
+		private JFrame m_jfPar = null ;
+		
+		public CustomStuff (JFrame jfPar)
+		{
+			m_jfPar = jfPar ;
+		}
 		
 		public void StartWinApp ()
 		{
@@ -278,7 +286,6 @@ public class MarksSwingMdiTest extends JFrame {
 			m_WorkerThread.StopThread () ;
 			//m_BackgroundTasks.bDoShutdown() ;
 		}
-
 		private void LogStartupSum ()
 		{
 			Log ("Program Started") ;
@@ -353,6 +360,9 @@ public class MarksSwingMdiTest extends JFrame {
 		public RealTimeLogFrameMgr m_rtlm = null ;
 		public class RealTimeLogFrameMgr
 		{
+			private JFrame m_jfPar = null ;
+			private JDesktopPane m_dpDesk = null ;
+			
 			private DefaultListModel<String> m_listModel ;
 			private int m_ilistModelMax = 5000 ;
 			private JList<String> m_list = null ;
@@ -360,13 +370,42 @@ public class MarksSwingMdiTest extends JFrame {
 			private JInternalFrame m_jfRealTimeLogs = null ;
 			private JPanel m_contentPane = null;
 			
-			public RealTimeLogFrameMgr (JInternalFrame jfRealTimeLogs)
+			public RealTimeLogFrameMgr 
+			(JFrame jfPar,
+			 JDesktopPane desk)
 			{
-				m_jfRealTimeLogs = jfRealTimeLogs ; 
-				InitRealTimeLogsFrame () ;
+				m_jfPar = jfPar ;
+				m_dpDesk = desk ;
+				InitRealTimeLogs_JInternalFrame () ;
 			}
-			private void InitRealTimeLogsFrame ()
+			private void InitRealTimeLogs_JInternalFrame ()
 			{
+				JInternalFrame jfr = null ;
+
+				jfr = new JInternalFrame
+						("Real Time Logs", true, true, true, true );
+				m_dpDesk.add(jfr) ;
+
+				//per this http://docs.oracle.com/javase/tutorial/uiswing/components/internalframe.html
+				//if you don't set the bounds, the normal\restore mode will be invisible i.e. you have to set
+				//some size.
+				jfr.setBounds(m_jfPar.getBounds());
+
+					
+				//m_jifRealTimeLogs.getContentPane().add(m_panel, BorderLayout.CENTER) ;
+				
+				//jfr.pack () ; //this minimizes i.e. iconifies
+				jfr.setVisible(true);
+				try {
+					jfr.setMaximum(true);
+				} catch (PropertyVetoException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
+				jfr.setClosable(false);  //real time logs always up
+				m_jfRealTimeLogs = jfr ;
+				
 				m_contentPane = new JPanel();
 				m_contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 				m_contentPane.setLayout(new BorderLayout(0, 0));
@@ -387,9 +426,6 @@ public class MarksSwingMdiTest extends JFrame {
 				m_scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
 				m_scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
 				m_contentPane.add(m_scrollPane, BorderLayout.CENTER);
-				
-				
-				
 			}
 			void SetListToEnd ()
 			{
@@ -461,15 +497,6 @@ public class MarksSwingMdiTest extends JFrame {
 				}
 				iListSize = m_list.getModel().getSize() ;
 
-				/*
-				while (m_listModel.getSize() > m_ilistModelMax)
-				{
-					//pop the first element off.
-					m_listModel.remove (0) ;
-				}
-				*/
-			
-				
 				if (bAutoScrollDisplay)
 				{
 					if (   iSel != -1
@@ -659,37 +686,4 @@ public class MarksSwingMdiTest extends JFrame {
 } //public class MarksSwingMdiTest extends JFrame {
 
 
-//class to display an ImageIcon on a panel
-class MyJPanel extends JPanel 
-{
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 1L;
-	private static Random generator = new Random();
-	private ImageIcon picture; // image to be displayed
-	private String[] images = { "yellowflowers.png", "purpleflowers.png",
-	   "redflowers.png", "redflowers2.png", "lavenderflowers.png" };
-	
-	// load image
-	public MyJPanel()
-	{
-	   int randomNumber = generator.nextInt( 5 );
-	   picture = new ImageIcon( images[ randomNumber ] ); // set icon
-	} // end MyJPanel constructor
-	
-	// display imageIcon on panel
-	public void paintComponent( Graphics g )
-	{
-	   super.paintComponent( g );
-	   picture.paintIcon( this, g, 0, 0 ); // display icon
-	} // end method paintComponent
-	
-	// return image dimensions
-	public Dimension getPreferredSize()
-	{
-	   return new Dimension( picture.getIconWidth(), 
-	      picture.getIconHeight() );  
-	} // end method getPreferredSize
-} // end class MyJPanel
 
