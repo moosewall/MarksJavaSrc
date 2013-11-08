@@ -77,7 +77,10 @@ public class MarksSwingMdiTest extends JFrame {
 	public static void main(String[] args) {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
-				try {
+				try 
+				{
+					AppLog.m_bLogToConsole = false ;
+					AppState.initAppDetails(MarksSwingMdiTest.class);
 					
 					/*
 					//default
@@ -214,10 +217,9 @@ public class MarksSwingMdiTest extends JFrame {
 			public void actionPerformed(ActionEvent e)
 			{
 				String sFN = TraceUtils.sGetFN() ;
-				try {
-					//m_jifRealTimeLogs.setMaximum(true);
-					//m_jifRealTimeLogs.setVisible(true);
-					//m_jifRealTimeLogs.moveToFront();
+				try 
+				{
+					cascade (m_desk) ;
 				} catch (Exception e1) {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
@@ -225,6 +227,23 @@ public class MarksSwingMdiTest extends JFrame {
 			}
 		});
 		mnWindow.add(mntmCascadeWindows);
+		
+		JMenuItem mntmTileWindows = new JMenuItem("Tile");
+		mntmTileWindows.addActionListener(new ActionListener()
+		{
+			public void actionPerformed(ActionEvent e)
+			{
+				String sFN = TraceUtils.sGetFN() ;
+				try 
+				{
+					tile (m_desk) ;
+				} catch (Exception e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			}
+		});
+		mnWindow.add(mntmTileWindows);
 		//////////////////
 		
 		////////////////////
@@ -246,6 +265,82 @@ public class MarksSwingMdiTest extends JFrame {
 		
 		m_cs.StartWinApp();
 	}
+	/////////////////////////////////
+	//
+	//11/8/13, sample code from here:
+	//http://www.javalobby.org/java/forums/t15696.html
+	//
+	public static void tile( JDesktopPane desktopPane, int layer ) {
+	    JInternalFrame[] frames = desktopPane.getAllFramesInLayer( layer );
+	    if ( frames.length == 0) return;
+	 
+	    tile( frames, desktopPane.getBounds() );
+	}
+	public static void tile( JDesktopPane desktopPane ) {
+	    JInternalFrame[] frames = desktopPane.getAllFrames();
+	    if ( frames.length == 0) return;
+	 
+	    tile( frames, desktopPane.getBounds() );
+	}
+	private static void tile( JInternalFrame[] frames, Rectangle dBounds ) {
+	    int cols = (int)Math.sqrt(frames.length);
+	    int rows = (int)(Math.ceil( ((double)frames.length) / cols));
+	    int lastRow = frames.length - cols*(rows-1);
+	    int width, height;
+	 
+	    if ( lastRow == 0 ) {
+	        rows--;
+	        height = dBounds.height / rows;
+	    }
+	    else {
+	        height = dBounds.height / rows;
+	        if ( lastRow < cols ) {
+	            rows--;
+	            width = dBounds.width / lastRow;
+	            for (int i = 0; i < lastRow; i++ ) {
+	                frames[cols*rows+i].setBounds( i*width, rows*height,
+	                                               width, height );
+	            }
+	        }
+	    }
+	            
+	    width = dBounds.width/cols;
+	    for (int j = 0; j < rows; j++ ) {
+	        for (int i = 0; i < cols; i++ ) {
+	            frames[i+j*cols].setBounds( i*width, j*height,
+	                                        width, height );
+	        }
+	    }
+	}	
+	/////////////////////////////////
+	//
+	//11/8/13, sample code from here:
+	//http://www.javalobby.org/forums/thread.jspa?threadID=15690&tstart=0
+	//
+	public static void cascade( JDesktopPane desktopPane, int layer ) {
+	    JInternalFrame[] frames = desktopPane.getAllFramesInLayer( layer );
+	    if ( frames.length == 0) return;
+	 
+	    cascade( frames, desktopPane.getBounds(), 24 );
+	}
+	public static void cascade( JDesktopPane desktopPane ) {
+	    JInternalFrame[] frames = desktopPane.getAllFrames();
+	    if ( frames.length == 0) return;
+	 
+	    cascade( frames, desktopPane.getBounds(), 24 );
+	}
+	private static void cascade( JInternalFrame[] frames, Rectangle dBounds, int separation ) {
+	    int margin = frames.length*separation + separation;
+	    int width = dBounds.width - margin;
+	    int height = dBounds.height - margin;
+	    for ( int i = 0; i < frames.length; i++) {
+	        frames[i].setBounds( separation + dBounds.x + i*separation,
+	                             separation + dBounds.y + i*separation,
+	                             width, height );
+	    }
+	}	
+	//////////////////////////////////
+	//
 	class PopupListener extends MouseAdapter {
 	    public void mousePressed(MouseEvent e) {
 	        maybeShowPopup(e);
@@ -446,6 +541,7 @@ public class MarksSwingMdiTest extends JFrame {
 					vert.setValue(iPosWanted);
 				}
 			}
+			/*Not needed since modified FlushLogs to setVisible (false) then (true)
 			/////////////////////////
 			//Force JList refresh.
 			//
@@ -456,12 +552,21 @@ public class MarksSwingMdiTest extends JFrame {
 				m_listModel.addElement(""); //add a dummy element to end.
 				m_listModel.removeElementAt(m_listModel.getSize()-1); //remove dummy element
 				m_list.setVisible(true);
+				//m_list.updateUI();
 			}
+			*/
 			void FlushLogs ()
 			{
 				boolean bAutoScrollDisplay = true ;
 				int iSel = m_list.getSelectedIndex() ;
 				int iListSize = m_list.getModel().getSize() ;
+				int iQueuedLogs = m_Logs.iGetCount() ;
+				if (iQueuedLogs == 0)
+				{
+					return ;
+				}
+				
+				m_list.setVisible(false);
 				
 				if (   iSel != -1
 					&& (iSel + 1) < iListSize)
@@ -485,6 +590,7 @@ public class MarksSwingMdiTest extends JFrame {
 					
 					int iSize = 0 ;
 					m_listModel.addElement(sLog);
+					AppLog.Log(sLog);
 					iSize = m_listModel.getSize() ;
 					
 					if (iSize + 1 >= m_ilistModelMax)
@@ -507,10 +613,15 @@ public class MarksSwingMdiTest extends JFrame {
 					SetListToEnd () ;
 				}
 				
+				m_list.setVisible(true);
+				
+				/*not needed.  setVisible (false) when filling log view, then
+				 * set visible true does the trick!
 				if (iNumFlushed > 0)
 				{
 					ForceListRefresh () ;
 				}
+				*/
 			}
 		
 		} //class RealTimeLogFrameMgr
@@ -552,6 +663,15 @@ public class MarksSwingMdiTest extends JFrame {
 				
 				return sr ;
 			}
+			public int iGetCount ()
+			{
+				int ir = 0 ;
+				synchronized (m_lstLogs)
+				{
+					ir = m_lstLogs.size() ;
+				}
+				return ir ;
+			}
 		}
 		Logs m_Logs = new Logs () ;
 		
@@ -574,7 +694,7 @@ public class MarksSwingMdiTest extends JFrame {
 			/////
 			private boolean m_bTrickleLogTestOn = false ;
 			private Date m_dtTrickleLogTest_LastTime = new Date () ;
-			private int m_iTrickleLogTest_IntervalSeconds = 2 ; 
+			private int m_iTrickleLogTest_IntervalSeconds = 1 ; 
 			public synchronized boolean bToggleTrickleLogTest ()
 			{
 				if (m_bTrickleLogTestOn)
