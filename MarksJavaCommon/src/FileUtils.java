@@ -193,6 +193,17 @@ public class FileUtils
 	}
 	////////////////////////////////
 	//
+	public static boolean bFileExists (String sFilePath)
+	{
+		File f = new File (sFilePath) ;
+		if (f.exists())
+		{
+			return true ;
+		}
+		return false ;
+	}
+	////////////////////////////////
+	//
 	public static String sDumpFileIntoStr (String sFilePath)
 	{
 		String sFN = TraceUtils.sGetFN() ;

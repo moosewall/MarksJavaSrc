@@ -18,6 +18,20 @@ public class BufUtils {
     }
     ////////////////////////////////////////////////
     //
+    public static boolean bStrIsEmpty (String s)
+    {
+    	if (s == null)
+    	{
+    		return true ;
+    	}
+    	if (s.isEmpty())
+    	{
+    		return true ;
+    	}
+    	return false ;
+    }
+    ////////////////////////////////////////////////
+    //
     public static String sGetEol ()
     {
     	//One way
