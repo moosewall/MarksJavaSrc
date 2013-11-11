@@ -2,7 +2,10 @@ import java.io.File;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -14,6 +17,9 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
  
+
+
+
 
 
 
@@ -47,7 +53,14 @@ public class XmlUtils
 		test_XmlWrite (sOutFile) ;
 		test_ReadXml (sOutFile) ;
 		*/
-		test_Object_SER () ;
+		//test_Object_XSER () ;
+		
+		XmlUtils xu = new XmlUtils () ; 
+				
+		Object_XSER_TestClass oxtc = xu.new Object_XSER_TestClass () ;
+		String sXML = oxtc.sSaveToXml() ;
+		
+		Object_XSER_TestClass oxtcRead = xu.new Object_XSER_TestClass () ;
 	}
 	/////////////////////////////////////////
 	//
@@ -303,7 +316,7 @@ public class XmlUtils
 	//
 	//http://docs.oracle.com/javase/tutorial/java/IandI/subclasses.html
 	//
-	public static void test_Object_SER ()
+	public static void test_Object_XSER ()
 	{
 		String s = "" ;
 		try
@@ -319,7 +332,7 @@ public class XmlUtils
 			
 			/////////////////////////////
 			XmlUtils xu = new XmlUtils () ;
-			String_SER ssTest1 = xu.new String_SER ("ssTest1", "ssTest1 Val") ;
+			String_XSER ssTest1 = xu.new String_XSER ("ssTest1", "ssTest1 Val") ;
 			ssTest1.SaveToXml(doc, rootNode);
 			/////////////////////////////
 
@@ -346,7 +359,7 @@ public class XmlUtils
 
 			docRead.getDocumentElement().normalize();
 			Node nRootRead = docRead.getDocumentElement() ;			
-			String_SER ssTest1_read = xu.new String_SER ("ssTest1", "ssTest1 Val") ;
+			String_XSER ssTest1_read = xu.new String_XSER ("ssTest1", "ssTest1 Val") ;
 			s = ssTest1_read.sReadFromXml(nRootRead) ;
 			
 		}
@@ -356,62 +369,89 @@ public class XmlUtils
 		}
 	}
 	//////////////////////////////////
-	//Class to prototype XML serializable classes
 	//
-	public class Object_SER_TestClass
+	public class Object_XSER_Mgr
 	{
-		public String m_sVal1 = "" ;
-		public String m_sVal2 = "" ;
-		public int m_iVal1 = 1 ;
-		public boolean m_bVal1 = true ;
-		public List <String> m_lstStrs = new ArrayList<String>() ;
+		private String m_sClassName = "" ;
+		private List <Object_XSER> m_lstObjs = new ArrayList <Object_XSER>() ;
 		
+	    //maybe
+		//example from http://stackoverflow.com/questions/6886712/c-sharp-to-java-dictionaries
+		//
+		//iterating HashMap: http://stackoverflow.com/questions/1066589/java-iterate-through-hashmap
+		//
+		private Map<String, Object_XSER> m_mapObjs = new HashMap <String, Object_XSER>() ;
+		
+		private XmlUtils m_xu = new XmlUtils () ; 
+		
+		public Object_XSER_Mgr (String sClassName)
+		{
+			m_sClassName = sClassName ;
+		}
+		public void AddStr (String sVarName, String sVal)
+		{
+			String_XSER sx = m_xu.new String_XSER (sVarName, sVal) ;
+			m_lstObjs.add(sx);
+			m_mapObjs.put(sVarName,  sx) ;
+		}
+		public void Addint (String sVarName, int iVal)
+		{
+			int_XSER ix = m_xu.new int_XSER (sVarName, iVal) ;
+			m_lstObjs.add(ix) ;
+			m_mapObjs.put(sVarName, ix) ;
+		}
+		public void Addbool (String sVarName, boolean bVal)
+		{
+			bool_XSER bx = m_xu.new bool_XSER (sVarName, bVal) ;
+			m_lstObjs.add(bx) ;
+			m_mapObjs.put(sVarName, bx) ;
+		}
+		public void AddStringList (String sVarName, List<String>lstStrs)
+		{
+			StringList_XSER slx = new StringList_XSER (sVarName, lstStrs) ;
+			m_lstObjs.add(slx) ;
+			m_mapObjs.put(sVarName, slx) ;
+		}
 		public String sSaveToXml ()
 		{
 			String sr = "" ;
+			Exception expThrown = null ;
 			try
 			{
-				XmlUtils xu = new XmlUtils () ;
-				List<Object_SER> list = new ArrayList<Object_SER>();
-
+				/////////////////////////////
+				//Init XML
+				//
 				DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
 				DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
 		 
 				// root elements
 				Document doc = docBuilder.newDocument();
-				Element rootEle = doc.createElement("Object_SER_TestClass");
+				Element rootEle = doc.createElement(m_sClassName);
 				Node rootNode = (Node)rootEle ;
 				doc.appendChild(rootNode);
-				
-				String_SER ss = null ;
-				int_SER is = null ;
-				bool_SER bs = null ;
-				
-				ss = xu.new String_SER ("m_sVal1", m_sVal1) ;
-				list.add(ss) ;
-			
-				ss = xu.new String_SER ("m_sVal2", m_sVal2) ;
-				list.add(ss) ;
-				
-				is = xu.new int_SER ("m_iVal1", m_iVal1) ;
-				list.add(is) ;
-				
-				bs = xu.new bool_SER ("m_bVal1", m_bVal1) ;
-				list.add(bs) ;
-				
-				/*todo
-				for (int iS=0; is<m_lstStrs.size(); iS++)
+
+				////////////////////////////
+				//Add data
+				//
+				Iterator it = m_mapObjs.entrySet().iterator();
+			    while (it.hasNext()) 
+			    {
+			        Map.Entry pairs = (Map.Entry)it.next();
+			        Object_XSER os = (Object_XSER)pairs.getValue() ;
+			        os.SaveToXml(doc, rootNode);
+			        
+			        it.remove(); // avoids a ConcurrentModificationException
+			    }				
+			    /*
+				for (int iOs=0; iOs<m_lstObjs.size(); iOs++)
 				{
-					ss = new String_SER ("m_lstStrs")
+					Object_XSER os = m_lstObjs.get(iOs) ;
+					os.SaveToXml(doc, rootNode);
 				}
 				*/
 				
-				for (int iOs=0; iOs<list.size(); iOs++)
-				{
-					Object_SER os = list.get(iOs) ;
-					os.SaveToXml(doc, rootNode);
-				}
-				
+				////////////////////////////
+				//Write XML
 				TransformerFactory transformerFactory = TransformerFactory.newInstance();
 				Transformer transformer = transformerFactory.newTransformer();
 				DOMSource source = new DOMSource(doc);
@@ -431,25 +471,168 @@ public class XmlUtils
 			}
 			catch (Exception exp)
 			{
+				expThrown = exp ;
+			}
+			return sr ;
+		}
+		public void LoadFromXml (String sXmlImage)
+		{
+			try
+			{
+				/////////////////////////////
+				//Init XML
+				//
+				DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+				DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
+				
+				StringReader srRdr = new StringReader (sXmlImage) ;
+				InputSource isRdr = new InputSource(srRdr);
+				Document docRead = docBuilder.parse(isRdr);
+				docRead.normalize();
+
+				docRead.getDocumentElement().normalize();
+				Node nRootRead = docRead.getDocumentElement() ;			
+
+				////////////////////////////
+				//get data
+				//
+				Iterator it = m_mapObjs.entrySet().iterator();
+			    while (it.hasNext()) 
+			    {
+			        Map.Entry pairs = (Map.Entry)it.next();
+			        Object_XSER os = (Object_XSER)pairs.getValue() ;
+
+			        
+			        
+			        
+			        it.remove(); // avoids a ConcurrentModificationException
+			    }				
+				
+				for (int iOs=0; iOs<m_lstObjs.size(); iOs++)
+				{
+					Object_XSER os = m_lstObjs.get(iOs) ;
+					
+					os.sReadFromXml(nRootRead);
+				}
+				
+				
+			}
+			catch (Exception exp)
+			{
+				
+			}
+		}
+	}
+	//////////////////////////////////
+	//Class to prototype XML serializable classes
+	//
+	public class Object_XSER_TestClass
+	{
+		public String m_sVal1 = "" ;
+		public String m_sVal2 = "" ;
+		public int m_iVal1 = 1 ;
+		public boolean m_bVal1 = true ;
+		public List <String> m_lstStrs = new ArrayList<String>() ;
+		
+		private XmlUtils m_xu = new XmlUtils () ;
+		
+		public Object_XSER_TestClass ()
+		{
+			m_lstStrs.add("A string") ;
+			m_lstStrs.add("another string") ;
+		}
+		
+		public String sSaveToXml ()
+		{
+			String sr = "" ;
+			try
+			{
+				Object_XSER_Mgr m_XSER_Mgr = m_xu.new Object_XSER_Mgr ("Object_XSER_TestClass") ;
+				
+				//Load our variables into the XML serializer
+				m_XSER_Mgr.AddStr("m_sVal1", m_sVal1);
+				m_XSER_Mgr.AddStr("m_sVal2", m_sVal2);
+				m_XSER_Mgr.Addint("m_iVal1", m_iVal1);
+				m_XSER_Mgr.Addbool("m_bVal1", m_bVal1);
+				m_XSER_Mgr.AddStringList("m_lstStrs", m_lstStrs);
+
+				sr = m_XSER_Mgr.sSaveToXml() ;
+				/*
+				XmlUtils xu = new XmlUtils () ;
+				List<Object_XSER> list = new ArrayList<Object_XSER>();
+
+				DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+				DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
+		 
+				// root elements
+				Document doc = docBuilder.newDocument();
+				Element rootEle = doc.createElement("Object_XSER_TestClass");
+				Node rootNode = (Node)rootEle ;
+				doc.appendChild(rootNode);
+				
+				String_XSER ss = null ;
+				int_XSER is = null ;
+				bool_XSER bs = null ;
+				
+				ss = xu.new String_XSER ("m_sVal1", m_sVal1) ;
+				list.add(ss) ;
+			
+				ss = xu.new String_XSER ("m_sVal2", m_sVal2) ;
+				list.add(ss) ;
+				
+				is = xu.new int_XSER ("m_iVal1", m_iVal1) ;
+				list.add(is) ;
+				
+				bs = xu.new bool_XSER ("m_bVal1", m_bVal1) ;
+				list.add(bs) ;
+				
+				for (int iOs=0; iOs<list.size(); iOs++)
+				{
+					Object_XSER os = list.get(iOs) ;
+					os.SaveToXml(doc, rootNode);
+				}
+				
+				TransformerFactory transformerFactory = TransformerFactory.newInstance();
+				Transformer transformer = transformerFactory.newTransformer();
+				DOMSource source = new DOMSource(doc);
+
+				StringWriter swXml = new StringWriter () ;
+				StreamResult result = new StreamResult(swXml);
+				
+				/////
+				//write out the XML so readable in text editor per this:
+				//http://stackoverflow.com/questions/161462/java-writing-a-dom-to-an-xml-file-formatting-issues
+				transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+				/////
+				
+				transformer.transform(source, result);
+				String sXml = swXml.toString() ;
+				sr = sXml ;
+				*/
+			}
+			catch (Exception exp)
+			{
 			}
 			
 			return sr ;
 		}
 	}
-	public class Object_SER
+	public class Object_XSER
 	{
 		protected String m_sValName = "" ;
 		protected String m_sValType = "" ;
 		protected String m_sVal = "" ;
 		
-		public Object_SER (String sValName, String sValType, String sVal)
+		public Object_XSER (String sValName, String sValType, String sVal)
 		{
 			m_sValName = sValName ;
 			m_sValType = sValType ;
 			m_sVal = sVal ;
 		}
-		public void SaveToXml (Document doc, Node node)
+		public Node SaveToXml (Document doc, Node node)
 		{
+			Node nr = null ;
+			
 			Element eleNew = doc.createElement(m_sValName);
 			node.appendChild(eleNew);
 	 
@@ -462,11 +645,13 @@ public class XmlUtils
 			attr = doc.createAttribute("value");
 			attr.setValue(m_sVal);
 			eleNew.setAttributeNode(attr);
-		}
-		public String sReadFromXml (Node node)
-		{
-			String sr = "" ;
 			
+			nr = eleNew ;
+			return nr ;
+		}
+		public Node nFindValNode (Node node)
+		{
+			Node nr = null ;
 			NodeList nlChildren = node.getChildNodes() ;
 			if (nlChildren != null)
 			{
@@ -477,26 +662,40 @@ public class XmlUtils
 					{
 						if (nChild.getNodeName() == m_sValName)
 						{
-							sr = nChild.getAttributes().getNamedItem("value").getNodeValue() ;
+							nr = nChild ;
 							break ;
 						}
 					}
 				}
 			}
+			return nr ;
+		}
+		public String sReadFromXml (Node node)
+		{
+			String sr = "" ;
 			
+			Node nVal = nFindValNode (node) ;
+			sr = nVal.getAttributes().getNamedItem("value").getNodeValue() ;
+			return sr ;
+		}
+		public String sReadTypeFromXml (Node node)
+		{
+			String sr = "" ;
+			Node nVal = nFindValNode (node) ;
+			sr = nVal.getAttributes().getNamedItem("type").getNodeValue() ;
 			return sr ;
 		}
 	}
-	public class String_SER extends Object_SER 
+	public class String_XSER extends Object_XSER 
 	{
-		public String_SER (String sValName, String sVal)
+		public String_XSER (String sValName, String sVal)
 		{
 			super (sValName, "String", sVal) ;
 		}
 	}
-	public class int_SER extends Object_SER 
+	public class int_XSER extends Object_XSER 
 	{
-		public int_SER (String sValName, int iVal)
+		public int_XSER (String sValName, int iVal)
 		{
 			super (sValName, "int", "") ;
 			m_sVal = Integer.toString(iVal) ;
@@ -508,9 +707,9 @@ public class XmlUtils
 			return ir ;
 		}
 	}
-	public class bool_SER extends Object_SER 
+	public class bool_XSER extends Object_XSER 
 	{
-		public bool_SER (String sValName, Boolean bVal)
+		public bool_XSER (String sValName, Boolean bVal)
 		{
 			super (sValName, "int", "") ;
 			m_sVal = String.valueOf(bVal) ;
@@ -522,5 +721,59 @@ public class XmlUtils
 			return br ;
 		}
 	}
+	public class StringList_XSER extends Object_XSER
+	{
+		private List<String> m_lstStrs = null ;
+		
+		public StringList_XSER (String sValName, List<String>lstStrs)
+		{
+			super (sValName, "StringList", Integer.toString(lstStrs.size())) ;
+			m_lstStrs = lstStrs ;
+		}
+		public Node SaveToXml (Document doc, Node node)
+		{
+			Node nr = null ;
+			
+			Node nRoot = super.SaveToXml(doc, node) ;
+
+			for (int iStrs=0; iStrs<m_lstStrs.size(); iStrs++)
+			{
+				String sSubVal = m_lstStrs.get(iStrs) ;
+				String sSubValName = String.format("%s%d", 
+						m_sValName,
+						iStrs) ;
+				String_XSER sx = new String_XSER (sSubValName, sSubVal) ;
+				sx.SaveToXml(doc, nRoot) ;
+			}
+			
+			nr = nRoot ;
+			return nr ;
+		}
+		public List<String>lstReadFromXml (Node node)
+		{
+			List<String> lstr = new ArrayList<String>() ;
+			
+			Node nRootVal = super.nFindValNode(node) ;
+
+			NodeList nlChildren = nRootVal.getChildNodes() ;
+			if (nlChildren != null)
+			{
+				for (int iChild=0; iChild<nlChildren.getLength(); iChild++)
+				{
+					Node nChild = nlChildren.item(iChild) ;
+					if (nChild.getNodeType() == Node.ELEMENT_NODE)
+					{
+						if (nChild.getNodeName().startsWith(m_sValName))
+						{
+							String sVal = nChild.getAttributes().getNamedItem("value").getNodeValue() ;
+							lstr.add(sVal) ;
+						}
+					}
+				}
+			}
+			
+			return lstr ;
+		}
+	} 
 	
 }
