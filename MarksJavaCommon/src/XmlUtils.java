@@ -588,24 +588,30 @@ public class XmlUtils
 			}
 		}
 	}
+	
+	/*
+	 * Object_XSER class, base XML serializable type.
+	 */
 	public class Object_XSER
 	{
-		//Types
+		////
+		//Supported Types
 		public static final String StringType = "String" ;
 		public static final String intType = "int" ;
 		public static final String boolType = "bool" ;
 		public static final String StringListType = "StringList" ;
 		
+		////
 		//other consts
-		/*on second thought, store this as a text node
-		public static final String XmlValueAttribName = "value" ;
-		*/
-		public static final String XmlTypeAttribName = "type" ;
+		public static final String XmlTypeAttribName = "type" ; 
 		
-		protected String m_sValName = "" ;
-		protected String m_sValType = "" ;
-		protected String m_sVal = "" ;
+		////
+		//data.  I know i know, should be getter\setter, you just better be careful!
+		public String m_sValName = "" ;
+		public String m_sValType = "" ;
+		public String m_sVal = "" ;
 		
+		////
 		public Object_XSER (String sValName, String sValType, String sVal)
 		{
 			m_sValName = sValName ;
@@ -659,7 +665,7 @@ public class XmlUtils
 					if (nChild.getNodeType() == Node.ELEMENT_NODE)
 					{
 						String sCurNodeName = nChild.getNodeName() ; 
-						if (sCurNodeName.equals(m_sValName))
+						if (sCurNodeName.equalsIgnoreCase(m_sValName))
 						{
 							nr = nChild ;
 							break ;
@@ -691,6 +697,8 @@ public class XmlUtils
 			return sr ;
 		}
 	}
+	////
+	//String_XSER is easy since it's basically the same behavior as Object_XSER
 	public class String_XSER extends Object_XSER 
 	{
 		public String_XSER (String sValName, String sVal)
@@ -698,6 +706,9 @@ public class XmlUtils
 			super (sValName, Object_XSER.StringType, sVal) ;
 		}
 	}
+	////
+	//Store an integer
+	//
 	public class int_XSER extends Object_XSER 
 	{
 		public int_XSER (String sValName, int iVal)
@@ -714,6 +725,9 @@ public class XmlUtils
 			return ir ;
 		}
 	}
+	////
+	//Store a boolean
+	//
 	public class bool_XSER extends Object_XSER 
 	{
 		public bool_XSER (String sValName, Boolean bVal)
@@ -728,6 +742,9 @@ public class XmlUtils
 			return br ;
 		}
 	}
+	////
+	//Store a list of strings.  Use this as a template for other lists.
+	//
 	public class StringList_XSER extends Object_XSER
 	{
 		private List<String> m_lstStrs = null ;
@@ -742,6 +759,8 @@ public class XmlUtils
 			{
 				iNumValues = m_lstStrs.size() ;
 			}
+			
+			//Store the count of items in root.
 			m_sVal = Integer.toString(iNumValues) ;
 		}
 		public Node SaveToXml (Node node)
@@ -753,9 +772,12 @@ public class XmlUtils
 			{
 				doc = (Document)node ;
 			}
-			
+		
+			//The root value is the count of items as set in the constructor.
 			Node nRoot = super.SaveToXml(node) ;
 
+			//The individual strings as sub-nodes using the same name as the root
+			//with a number
 			for (int iStrs=0; iStrs<m_lstStrs.size(); iStrs++)
 			{
 				String sSubVal = m_lstStrs.get(iStrs) ;
@@ -771,8 +793,11 @@ public class XmlUtils
 		}
 		public List<String>lstReadFromXml (Node node)
 		{
+			String sFN = TraceUtils.sGetFN() ;
+			
 			List<String> lstr = new ArrayList<String>() ;
 			
+			//Get the root node, which has a count.
 			Node nRootVal = super.nFindValNode(node) ;
 			if (nRootVal == null)
 			{
@@ -780,17 +805,34 @@ public class XmlUtils
 			}
 			
 			////////
-			//new more flexible way, iterate the number specified in the root
+			//Now get the first child, which should be a data not
 			//
 			Node nFirst = nRootVal.getFirstChild() ;
 			if (nFirst == null)
 			{
-				//no count saved in XML.
+				TraceUtils.Trc (sFN + "no count saved in XML.") ;
+				assert false ;
 				return lstr ;
 			}
+			int iNodeType = nFirst.getNodeType() ;
+			if (iNodeType != Node.TEXT_NODE)
+			{
+				TraceUtils.Trc(sFN + " invalid node returned");
+				assert false ;
+			}
+			
 			//Get the count of child elements.
 			String sChildren = nFirst.getTextContent() ;
-			int iChildren = Integer.parseInt(sChildren) ;
+			int iChildren = 0 ;
+			try
+			{
+				//http://docs.oracle.com/javase/7/docs/api/java/lang/Integer.html#parseInt(java.lang.String)
+				iChildren = Integer.parseInt(sChildren) ;
+			}
+			catch (NumberFormatException nfexp)
+			{
+				//exception parsing integer.
+			}
 			
 			//load each child.
 			for (int iCurChild=0; iCurChild < iChildren; iCurChild++)
@@ -801,7 +843,7 @@ public class XmlUtils
 				lstr.add(sCur) ;
 			}
 
-			/*last way, iterate children of root.
+			/*last, uninspired way, iterate children of root.
 			NodeList nlChildren = nRootVal.getChildNodes() ;
 			if (nlChildren != null)
 			{
