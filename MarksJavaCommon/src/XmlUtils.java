@@ -48,6 +48,7 @@ public class XmlUtils
 	{
 		String sOutFile = "C:\\file.xml" ;
 		sOutFile = AppState.m_AppDetails.m_sMainClassDir + "\\test_XmlWrite.xml" ;
+		sOutFile = "c:\\tmp\\test_XmlWrite.xml" ;
 
 		/*
 		test_XmlWrite (sOutFile) ;
@@ -59,6 +60,7 @@ public class XmlUtils
 				
 		Object_XSER_TestClass oxtc = xu.new Object_XSER_TestClass () ;
 		String sXML = oxtc.sSaveToXml() ;
+		FileUtils.bDumpStrIntoFile(sOutFile, sXML) ;
 		
 		Object_XSER_TestClass oxtcRead = xu.new Object_XSER_TestClass () ;
 		oxtcRead.LoadFromXml(sXML);
@@ -98,7 +100,7 @@ public class XmlUtils
 		Document doc = docBuilder.newDocument();
 		Element rootElement = doc.createElement("company");
 		doc.appendChild(rootElement);
- 
+		
 		// staff elements
 		Element staff = doc.createElement("Staff");
 		rootElement.appendChild(staff);
@@ -334,7 +336,7 @@ public class XmlUtils
 			/////////////////////////////
 			XmlUtils xu = new XmlUtils () ;
 			String_XSER ssTest1 = xu.new String_XSER ("ssTest1", "ssTest1 Val") ;
-			ssTest1.SaveToXml(doc, rootNode);
+			ssTest1.SaveToXml(rootNode);
 			/////////////////////////////
 
 			TransformerFactory transformerFactory = TransformerFactory.newInstance();
@@ -486,7 +488,7 @@ public class XmlUtils
 			    {
 			        Map.Entry<String, Object_XSER> pairs = (Map.Entry<String, Object_XSER>)it.next();
 			        Object_XSER os = (Object_XSER)pairs.getValue() ;
-			        os.SaveToXml(doc, rootNode);
+			        os.SaveToXml(rootNode);
 			        
 			        it.remove(); // avoids a ConcurrentModificationException
 			    }				
@@ -593,7 +595,9 @@ public class XmlUtils
 		public static final String StringListType = "StringList" ;
 		
 		//other consts
+		/*on second thought, store this as a text node
 		public static final String XmlValueAttribName = "value" ;
+		*/
 		public static final String XmlTypeAttribName = "type" ;
 		
 		protected String m_sValName = "" ;
@@ -606,9 +610,15 @@ public class XmlUtils
 			m_sValType = sValType ;
 			m_sVal = sVal ;
 		}
-		public Node SaveToXml (Document doc, Node node)
+		public Node SaveToXml (Node node)
 		{
 			Node nr = null ;
+			
+			Document doc = node.getOwnerDocument() ;
+			if (doc == null)
+			{
+				doc = (Document)node ;
+			}
 			
 			Element eleNew = doc.createElement(m_sValName);
 			node.appendChild(eleNew);
@@ -619,9 +629,18 @@ public class XmlUtils
 			attr.setValue(m_sValType);
 			eleNew.setAttributeNode(attr);
 			
+			/*save as text node
 			attr = doc.createAttribute(XmlValueAttribName);
 			attr.setValue(m_sVal);
 			eleNew.setAttributeNode(attr);
+			
+			e.g.
+			Element firstname = doc.createElement("firstname");
+			firstname.appendChild(doc.createTextNode("yong"));
+			staff.appendChild(firstname);
+			*/
+			Node nText = doc.createTextNode(m_sVal) ;
+			eleNew.appendChild(nText) ;
 			
 			nr = eleNew ;
 			return nr ;
@@ -652,7 +671,13 @@ public class XmlUtils
 			String sr = "" ;
 			
 			Node nVal = nFindValNode (node) ;
+			/*
 			sr = nVal.getAttributes().getNamedItem(XmlValueAttribName).getNodeValue() ;
+			*/
+			if (nVal != null)
+			{
+				sr = nVal.getTextContent() ;
+			}
 			return sr ;
 		}
 		public String sReadTypeFromXml (Node node)
@@ -716,11 +741,17 @@ public class XmlUtils
 			}
 			m_sVal = Integer.toString(iNumValues) ;
 		}
-		public Node SaveToXml (Document doc, Node node)
+		public Node SaveToXml (Node node)
 		{
 			Node nr = null ;
 			
-			Node nRoot = super.SaveToXml(doc, node) ;
+			Document doc = node.getOwnerDocument() ;
+			if (doc == null)
+			{
+				doc = (Document)node ;
+			}
+			
+			Node nRoot = super.SaveToXml(node) ;
 
 			for (int iStrs=0; iStrs<m_lstStrs.size(); iStrs++)
 			{
@@ -729,7 +760,7 @@ public class XmlUtils
 						m_sValName,
 						iStrs) ;
 				String_XSER sx = new String_XSER (sSubValName, sSubVal) ;
-				sx.SaveToXml(doc, nRoot) ;
+				sx.SaveToXml(nRoot) ;
 			}
 			
 			nr = nRoot ;
@@ -751,7 +782,13 @@ public class XmlUtils
 					{
 						if (nChild.getNodeName().startsWith(m_sValName))
 						{
+							String sVal = "" ;
+							
+							/*
 							String sVal = nChild.getAttributes().getNamedItem("value").getNodeValue() ;
+							*/
+							sVal = nChild.getTextContent() ;
+							
 							lstr.add(sVal) ;
 						}
 					}
