@@ -543,6 +543,8 @@ public class XmlUtils
 		{
 			m_lstStrs.add("A string") ;
 			m_lstStrs.add("another string") ;
+			m_lstStrs.add("line3") ;
+			m_lstStrs.add("line4 \n with linefeed") ;
 		}
 		
 		public String sSaveToXml ()
@@ -656,7 +658,8 @@ public class XmlUtils
 					Node nChild = nlChildren.item(iChild) ;
 					if (nChild.getNodeType() == Node.ELEMENT_NODE)
 					{
-						if (nChild.getNodeName() == m_sValName)
+						String sCurNodeName = nChild.getNodeName() ; 
+						if (sCurNodeName.equals(m_sValName))
 						{
 							nr = nChild ;
 							break ;
@@ -771,7 +774,34 @@ public class XmlUtils
 			List<String> lstr = new ArrayList<String>() ;
 			
 			Node nRootVal = super.nFindValNode(node) ;
+			if (nRootVal == null)
+			{
+				return lstr ;
+			}
+			
+			////////
+			//new more flexible way, iterate the number specified in the root
+			//
+			Node nFirst = nRootVal.getFirstChild() ;
+			if (nFirst == null)
+			{
+				//no count saved in XML.
+				return lstr ;
+			}
+			//Get the count of child elements.
+			String sChildren = nFirst.getTextContent() ;
+			int iChildren = Integer.parseInt(sChildren) ;
+			
+			//load each child.
+			for (int iCurChild=0; iCurChild < iChildren; iCurChild++)
+			{
+				String sCurChild = String.format("%s%d", m_sValName, iCurChild) ;
+				String_XSER sxCur = new String_XSER (sCurChild, "") ;
+				String sCur = sxCur.sReadFromXml(nRootVal) ;
+				lstr.add(sCur) ;
+			}
 
+			/*last way, iterate children of root.
 			NodeList nlChildren = nRootVal.getChildNodes() ;
 			if (nlChildren != null)
 			{
@@ -784,9 +814,6 @@ public class XmlUtils
 						{
 							String sVal = "" ;
 							
-							/*
-							String sVal = nChild.getAttributes().getNamedItem("value").getNodeValue() ;
-							*/
 							sVal = nChild.getTextContent() ;
 							
 							lstr.add(sVal) ;
@@ -794,7 +821,7 @@ public class XmlUtils
 					}
 				}
 			}
-			
+			*/
 			return lstr ;
 		}
 	} 
