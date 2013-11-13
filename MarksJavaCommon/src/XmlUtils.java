@@ -1,3 +1,5 @@
+//XmlUtils.java  Make sure to sync changes here to XmlUtils.cs(C# version)\.h(C++ version)
+//
 import java.io.File;
 import java.io.StringReader;
 import java.io.StringWriter;
@@ -16,15 +18,6 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
- 
-
-
-
-
-
-
-
-
 
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
@@ -33,6 +26,8 @@ import org.w3c.dom.Node;
 import org.w3c.dom.Element;
 import org.xml.sax.InputSource;
  
+//Note, .CS\C# and .h\.cpp\C++ versions can be found here:
+//https://docs.google.com/document/d/1D3eWy90JC_dld5K2k-3EIb069kxtagKkNGewOdCRnOo/edit#
 
 public class XmlUtils 
 {
@@ -767,12 +762,6 @@ public class XmlUtils
 		{
 			Node nr = null ;
 			
-			Document doc = node.getOwnerDocument() ;
-			if (doc == null)
-			{
-				doc = (Document)node ;
-			}
-		
 			//The root value is the count of items as set in the constructor.
 			Node nRoot = super.SaveToXml(node) ;
 
