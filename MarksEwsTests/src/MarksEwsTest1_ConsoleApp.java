@@ -61,8 +61,9 @@ public class MarksEwsTest1_ConsoleApp {
 		{
 			ExchangeService service = new ExchangeService(ExchangeVersion.Exchange2010_SP2);
 			
-			String sExchangeUrl = "https://webmail.east.nmci.navy.mil/owa/" ;
-			service.autodiscoverUrl(sExchangeUrl) ;
+			//String sExchangeUrl = "https://webmail.east.nmci.navy.mil/owa/" ;
+			String sAutoUrl = "mark.wallace@DMDS.WS" ;
+			service.autodiscoverUrl(sAutoUrl) ;
 		}
 		catch (Exception exp)
 		{
