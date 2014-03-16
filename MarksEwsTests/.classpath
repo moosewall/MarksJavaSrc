@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.7"/>
+	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/MarksJavaCommon"/>
+	<classpathentry kind="lib" path="../JavaLibs/ini4j-0.5.2/ini4j-0.5.2.jar"/>
+	<classpathentry kind="lib" path="C:/MarksDataRoot/Marks_Tech_Yard/MarksJavaDev/MarksJavaSrc/JavaLibs/EWSJavaAPI_1.2/EWSJavaAPI_1.2.jar"/>
+	<classpathentry kind="lib" path="C:/MarksDataRoot/Marks_Tech_Yard/MarksJavaDev/MarksJavaSrc/JavaLibs"/>
+	<classpathentry kind="lib" path="C:/MarksDataRoot/Marks_Tech_Yard/MarksJavaDev/MarksJavaSrc/JavaLibs/commons-codec-1.4.jar"/>
+	<classpathentry kind="lib" path="C:/MarksDataRoot/Marks_Tech_Yard/MarksJavaDev/MarksJavaSrc/JavaLibs/commons-httpclient-3.1.jar"/>
+	<classpathentry kind="lib" path="C:/MarksDataRoot/Marks_Tech_Yard/MarksJavaDev/MarksJavaSrc/JavaLibs/jcifs-1.3.15.jar"/>
+	<classpathentry kind="lib" path="C:/MarksDataRoot/Marks_Tech_Yard/MarksJavaDev/MarksJavaSrc/JavaLibs/commons-logging-1.1.1.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>
