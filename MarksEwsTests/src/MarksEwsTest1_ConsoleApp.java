@@ -1,7 +1,9 @@
 
 import microsoft.exchange.webservices.*;
+import microsoft.exchange.webservices.data.ExchangeCredentials;
 import microsoft.exchange.webservices.data.ExchangeService;
 import microsoft.exchange.webservices.data.ExchangeVersion;
+import microsoft.exchange.webservices.data.WebCredentials;
 
 /*
  MW, 3/15/2014, attempting to use the EWS API.
@@ -60,6 +62,12 @@ public class MarksEwsTest1_ConsoleApp {
 		try
 		{
 			ExchangeService service = new ExchangeService(ExchangeVersion.Exchange2010_SP2);
+			
+			//todo, figure out PKI authentication.
+			//http://stackoverflow.com/questions/15283682/sslcontext-certificate-chain-not-populated-into-context
+			
+			//http://stackoverflow.com/questions/15283682/sslcontext-certificate-chain-not-populated-into-context
+			ExchangeCredentials cred = new WebCredentials () ;
 			
 			//String sExchangeUrl = "https://webmail.east.nmci.navy.mil/owa/" ;
 			String sAutoUrl = "mark.wallace@DMDS.WS" ;
