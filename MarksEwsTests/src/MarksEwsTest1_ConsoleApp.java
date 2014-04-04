@@ -1,4 +1,9 @@
 
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.TrustManagerFactory;
+import javax.security.cert.X509Certificate;
+import javax.xml.ws.spi.http.HttpContext;
+
 import microsoft.exchange.webservices.*;
 import microsoft.exchange.webservices.data.ExchangeCredentials;
 import microsoft.exchange.webservices.data.ExchangeService;
@@ -66,11 +71,23 @@ public class MarksEwsTest1_ConsoleApp {
 			//todo, figure out PKI authentication.
 			//http://stackoverflow.com/questions/15283682/sslcontext-certificate-chain-not-populated-into-context
 			
+			//http://stackoverflow.com/questions/6989117/java-https-with-client-verification-using-windows-keystore
+			
+			//build a list with the client cert to authenticate with.
+			/*
+			TrustManagerFactory trustFac = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+			TrustManager tm = new TrustManager () ;
+			*/
+			
+			CertFindingTrustManager cftm = new CertFindingTrustManager () ; 
+			microsoft.exchange.webservices.data.ClientCertificateCredentials cccs = new microsoft.exchange.webservices.data.ClientCertificateCredentials (cftm) ;  
+			
 			//http://stackoverflow.com/questions/15283682/sslcontext-certificate-chain-not-populated-into-context
-			ExchangeCredentials cred = new WebCredentials () ;
+			ExchangeCredentials cred = (ExchangeCredentials)cccs ;
 			
 			//String sExchangeUrl = "https://webmail.east.nmci.navy.mil/owa/" ;
-			String sAutoUrl = "mark.wallace@DMDS.WS" ;
+			//String sAutoUrl = "mark.wallace@DMDS.WS" ;
+			String sAutoUrl = "mark.wallace.ctr@navy.mil" ;
 			service.autodiscoverUrl(sAutoUrl) ;
 		}
 		catch (Exception exp)
