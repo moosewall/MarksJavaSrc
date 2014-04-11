@@ -1,0 +1,264 @@
+function from SrcTpltMgr.cpp, reference to implement in JAVA.
+
+void CSrcTpltMgrApp::OnFileCopygenericsourcedirectory() 
+{
+	CString csLog ;
+	CString csSrcDir ;
+	CString csDestDir ;
+	CString csPrjFile ;
+	CString csPrjName ;
+	CString csNewProjName ;
+	CString csMask ;
+	CStringList cslDirFiles ;
+	BOOL bCreateDir = FALSE ;
+	CString csNewDir ;
+	CGetTextDlg GetTextDlg ;
+	CStringList cslFiles ;
+	CString csFileName ;
+	CString csCurProjName ;
+	CString csFlg ;
+	CString csUp ;
+
+	m_pMainFrm->DisplayProgramState ("Copying Generic Source Project...") ;
+
+	Log ("****************************") ;
+	Log ("Start Project Copy") ;
+
+	if (!bBrowseForDiskDirectory 
+		("Select Generic Source Directory To Copy From", 
+		 csSrcDir,
+		 m_csSrcGDir))
+	{
+		goto exit ;
+	} ;
+
+	csMask.Format ("%s\\*.*", csSrcDir) ;
+	GetFileListRecursive
+		( csMask.GetBuffer(0),
+		  cslFiles ) ;
+
+	//Save this directory so don't have to browse so much
+	m_csSrcGDir = csSrcDir ;
+
+	csLog.Format ("Source directory is %s", csSrcDir) ;
+	Log (csLog) ;
+
+	BeginWaitCursor () ;
+
+	//use directory name as prj. name.
+	csPrjFile = csParseFileName (csSrcDir) ;
+	csPrjName = csParseFileName (csSrcDir) ;
+
+/*
+	POSITION pos ;
+	pos = cslFiles.GetHeadPosition () ;
+	while (pos)
+	{
+		csFileName = cslFiles.GetNext (pos) ;
+		csUp = csFileName ;
+		csUp.MakeUpper () ;
+
+		if (csUp.Find (".JPR") > 0)
+		{
+			//VC++ project file
+			csFlg = "JBD" ;
+			csCurProjName = csParseFileName 
+				(csFileName.GetBuffer(0),
+				 TRUE) ;
+			csPrjFile = csFileName ;
+			csPrjName = csCurProjName ;
+
+			Trace ("\n  JBuilder Project file found->%s",
+				csCurProjName) ;
+			Log (csFileName, csFlg) ;
+			Trace ("\n  %s", csFileName) ;
+			break ;
+		}
+
+	} ;
+*/
+	if (csPrjName == "")
+	{
+		Log ("No directory name found.", "ERR") ;
+		goto exit ;
+	} ;
+
+	if (!bBrowseForDiskDirectory ("Select Project Destination Folder", csDestDir, m_csDestGDir ))
+	{
+		goto exit ;
+	} ;
+
+	m_csDestGDir = csDestDir ;
+
+	if (csSrcDir == csDestDir)
+	{
+		Log ("ERROR: Can't copy to self") ;
+		goto exit ;
+	} ;
+
+	csLog.Format ("Destination directory is %s", csDestDir) ;
+	Log (csLog) ;
+
+	GetTextDlg.m_csTitle.Format ("Save %s to %s as:",
+		csPrjName,
+		csDestDir) ;
+	if (GetTextDlg.DoModal() != IDOK)
+	{
+		goto exit ;
+	} ;
+	csNewProjName = GetTextDlg.m_csText ;
+	bCreateDir = GetTextDlg.m_bCreateDir ;
+
+	if (csNewProjName == "")
+	{
+		Log ("ERROR: Invalid project name") ;
+		goto exit ;
+	} ;
+
+	BeginWaitCursor () ;
+
+	if (bCreateDir)
+	{
+		csNewDir.Format ("%s\\%s",
+			csDestDir,
+			csNewProjName) ;
+		if (!CreateDirectory (csNewDir, NULL))
+		{
+			csLog.Format ("ERROR creating %s", csNewDir) ;
+			Log (csLog) ;
+			goto exit ;
+		} ;
+		csDestDir = csNewDir ;
+	} ;
+
+	csMask.Format ("%s\\*.*", csDestDir) ;
+	GetFileListRecursive
+		( csMask,
+		  cslDirFiles ) ;
+	if (cslDirFiles.GetCount() > 0)
+	{
+		csLog.Format ("ERROR: Choose an empty directory to copy to") ;
+		Log (csLog) ;
+		goto exit ;
+	} ;
+
+	csLog.Format ("Begin copy of %s to %s", csPrjName, csNewProjName) ;
+	Log (csLog) ;
+
+
+	//First name a copy of the original dir.
+	if (!bCopyDir (csSrcDir, csDestDir))
+	{
+		csLog.Format ("Error copying %s to %s",
+			csSrcDir, csDestDir) ;
+		Log (csLog) ;
+		goto exit ;
+	} ;
+
+
+	csMask.Format ("%s\\*.*", csDestDir) ;
+	GetFileListRecursive
+		( csMask,
+		  cslDirFiles ) ;
+	if (cslDirFiles.GetCount() < 1)
+	{
+		Trace ("\n  not files in %s", csSrcDir) ;
+		goto exit ;
+	} ;
+
+	if (csNewProjName.CompareNoCase(csPrjName) == 0)
+	{
+		//all done, because project name unchanged.
+		goto complete ;
+	} ;
+	if (!bReplaceTextInFiles
+		( cslDirFiles,
+		  csPrjName,
+		  csNewProjName ))
+	{
+		Log ("Error renaming project") ;
+		goto exit ;
+	} ;
+	Trace ("\n  returned from bReplaceTextInFiles") ;
+
+	if (!bRenameDirs
+		( cslDirFiles,
+		  csPrjName,
+		  csNewProjName ))
+	{
+		Log ("Error renaming project files") ;
+		goto exit ;
+	} ;
+
+	//regenerate File list because dirs changed.
+	csMask.Format ("%s\\*.*", csDestDir) ;
+	cslDirFiles.RemoveAll () ;
+	GetFileListRecursive
+		( csMask,
+		  cslDirFiles ) ;
+	if (cslDirFiles.GetCount() < 1)
+	{
+		Trace ("\n  not files in %s", csSrcDir) ;
+		goto exit ;
+	} ;
+
+	if (!bRenameDirs
+		( cslDirFiles,
+		  csPrjName,
+		  csNewProjName ))
+	{
+		Log ("Error renaming project files") ;
+		goto exit ;
+	} ;
+
+	//regenerate File list because dirs changed.
+	csMask.Format ("%s\\*.*", csDestDir) ;
+	cslDirFiles.RemoveAll () ;
+	GetFileListRecursive
+		( csMask,
+		  cslDirFiles ) ;
+	if (cslDirFiles.GetCount() < 1)
+	{
+		Trace ("\n  not files in %s", csSrcDir) ;
+		goto exit ;
+	} ;
+
+	if (!bRenameFiles
+		( cslDirFiles,
+		  csPrjName,
+		  csNewProjName ))
+	{
+		Log ("Error renaming project files") ;
+		goto exit ;
+	} ;
+	Trace ("\n  returned from bRenameFiles") ;
+
+	csLog.Format ("Replace GUIDs?  If in doubt, say NO!!") ;
+	if (AfxMessageBox (csLog, MB_YESNO) == IDYES)
+	{
+		//if (!bChangeGUIDs (cslDirFiles))
+		if (!bChangeGUIDs_OnAllFilesInDir (csDestDir))
+		{
+			Log ("Error changing GUIDs") ;
+			goto exit ;
+		}
+		else
+		{
+			Log ("GUIDs renamed") ;
+		} ;
+	} ;
+		  
+complete:
+
+	Log ("Project copy complete:") ;
+	csLog.Format ("  New project directory is %s", csDestDir) ;
+	Log (csLog) ;
+	csLog.Format ("  New project name is %s", csNewProjName) ;
+	Log (csLog) ;
+
+exit: ;
+	m_pMainFrm->DisplayProgramState ("Ready") ;
+	
+	
+	
+}
