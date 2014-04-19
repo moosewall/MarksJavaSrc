@@ -320,6 +320,8 @@ public class JSMTP_ChannelCheck_AppWin extends JFrame
 			
 			try
 			{
+
+/*				
 				//s = sFN + " todo" ;
 				//ProgUtils.MsgBox(s);
 
@@ -339,7 +341,7 @@ public class JSMTP_ChannelCheck_AppWin extends JFrame
 					throw new Exception ("No destination directory selected") ;
 				}
 				
-				sNewPrjName = GetStrDlg.sEnterStr(m_AppSettings.m_sDestName, "Enter destination project name", m_Frame) ;
+				sNewPrjName = JSMTP_ChannelCheck_ConfigDlg.sEnterStr(m_AppSettings.m_sDestName, "Enter destination project name", m_Frame) ;
 				if (sNewPrjName == "")
 				{
 					throw new Exception ("No destination project name specified") ;
@@ -373,6 +375,7 @@ public class JSMTP_ChannelCheck_AppWin extends JFrame
 				m_AppSettings.m_sSrcDir = sSrcDir ;
 				m_AppSettings.m_sDestDir = sDestDir ;
 				m_AppSettings.m_sDestName = sNewPrjName ;
+*/
 				
 				Log (sFN + ", Operation completed OK") ;
 			}
