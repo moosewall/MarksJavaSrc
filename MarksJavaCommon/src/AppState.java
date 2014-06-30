@@ -82,7 +82,11 @@ public class AppState
 		}
 		else
 		{
+			//MW, 6/30/14
+			sr = f.getAbsolutePath() ;
+			/*MW, 6/30/14
 			sr = sClassPath ;
+			*/
 		}
 		
 		return sr ;
