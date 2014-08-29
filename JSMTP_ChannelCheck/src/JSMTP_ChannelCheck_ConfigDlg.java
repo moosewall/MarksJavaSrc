@@ -15,6 +15,7 @@ import javax.swing.JTextField;
 
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
+
 import javax.swing.JPasswordField;
 
 
@@ -24,6 +25,12 @@ public class JSMTP_ChannelCheck_ConfigDlg extends JDialog
 	 * Launch the application.
 	 */
 	public static void main(String[] args) {
+		
+		//call this before anything so can trace, etc.
+		AppState.initAppDetails(JSMTP_ChannelCheck_ConfigDlg.class); 
+		
+		String sFN = TraceUtils.sGetFN () ;
+		TraceUtils.Trc(sFN + " entered");
 		
 		Boolean b = false ;
 		try {
@@ -43,6 +50,8 @@ public class JSMTP_ChannelCheck_ConfigDlg extends JDialog
 			e.printStackTrace(pw);
 			ProgUtils.MsgBox(sw.toString()); // stack trace as a string			
 		}
+		
+		TraceUtils.Trc(sFN + " exited");
 	}
 	///////////////////////////////////////////////////
 	//
