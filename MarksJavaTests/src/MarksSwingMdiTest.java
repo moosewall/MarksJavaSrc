@@ -555,6 +555,11 @@ public class MarksSwingMdiTest extends JFrame {
 				//m_list.updateUI();
 			}
 			*/
+			//////////////////////////////////////////
+			//
+			//MW, 1/24/2015, modified to defend against the log
+			//display going blank when many logs are queued.
+			//
 			void FlushLogs ()
 			{
 				boolean bAutoScrollDisplay = true ;
@@ -582,6 +587,7 @@ public class MarksSwingMdiTest extends JFrame {
 					{
 						break ;
 					}
+					
 					String sLog = m_Logs.sGetLog() ;
 					if (sLog == "")
 					{
@@ -593,6 +599,7 @@ public class MarksSwingMdiTest extends JFrame {
 					AppLog.Log(sLog);
 					iSize = m_listModel.getSize() ;
 					
+					
 					if (iSize + 1 >= m_ilistModelMax)
 					{
 						//pop the first element off.
@@ -600,8 +607,31 @@ public class MarksSwingMdiTest extends JFrame {
 						m_listModel.removeElementAt(0);
 					}
 					iNumFlushed++ ;
+					
+					//////////////////////
+					//MW, 1/24/2015, found a way to fix the log display going blank when
+					//many logs are added at once.  Make sure to keep one log in the "holster"
+					//to give the display object a chance to catch up.
+					//
+					if (   m_Logs.iGetCount() == 1
+						&& iQueuedLogs > 1)  //only if more than 1 log in first place
+					{
+						/*not needed.
+						try {
+							Thread.sleep(10);
+						} catch (InterruptedException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+						*/
+						break ;
+					}
+					////////////////////////
 				}
 				iListSize = m_list.getModel().getSize() ;
+
+				m_list.setVisible(true);
+				//m_list.ensureIndexIsVisible(m_list.getSelectedIndex());
 
 				if (bAutoScrollDisplay)
 				{
@@ -612,8 +642,6 @@ public class MarksSwingMdiTest extends JFrame {
 					}
 					SetListToEnd () ;
 				}
-				
-				m_list.setVisible(true);
 				
 				/*not needed.  setVisible (false) when filling log view, then
 				 * set visible true does the trick!
