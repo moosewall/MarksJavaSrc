@@ -1,0 +1,2 @@
+Jan 25, 2015 8:30:57 AM AppLog Log
+INFO: initialize initialized

@@ -165,15 +165,19 @@ public class JSMTP_ChannelCheck_AppWin extends JFrame
 
 		JMenu mnCommands = new JMenu("Commands");
 		menuBar.add(mnCommands);
-		JMenuItem mntmCloneGenericProject = new JMenuItem("Clone Generic Project");
-		mntmCloneGenericProject.addActionListener(new ActionListener() {
+		
+		JMenuItem mntmSmtpSendTest = new JMenuItem("Smtp Send Test");
+		mntmSmtpSendTest.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) 
 			{
-				m_cs.Do_GenericProjectClone();
+				String sFN = TraceUtils.sGetFN() ;
+				Log (sFN + "begin") ;
+				m_cs.Do_SmtpSendTest();
+				Log (sFN + "end") ;
 			}
 		});
-		mnCommands.add(mntmCloneGenericProject);
-
+		mnCommands.add(mntmSmtpSendTest);
+		
 		JMenu mnHelp = new JMenu("Help");
 		menuBar.add(mnHelp);
 		JMenuItem mntmAbout = new JMenuItem("About");
@@ -280,9 +284,14 @@ public class JSMTP_ChannelCheck_AppWin extends JFrame
 	private class CustomStuff
 	{
 		private JFrame m_jfPar = null ;
+		
+		private MyLogger m_MyLogger = new MyLogger () ;
+		
 		public CustomStuff (JFrame jfPar)
 		{
 			m_jfPar = jfPar ;
+			
+			
 		}
 		
 		public void StartWinApp ()
@@ -308,6 +317,13 @@ public class JSMTP_ChannelCheck_AppWin extends JFrame
 		{
 			//signal controlling form to close gracefully.
 			m_jfPar.dispatchEvent(new WindowEvent(m_jfPar, WindowEvent.WINDOW_CLOSING));
+		}
+		public void Do_SmtpSendTest ()
+		{
+			String sFN = TraceUtils.sGetFN() ;
+			String s = "" ;
+
+			JSMTP_ChannelCheck_Utils.TestSmtp(m_MyLogger);
 		}
 		public void Do_GenericProjectClone ()
 		{
@@ -396,7 +412,7 @@ public class JSMTP_ChannelCheck_AppWin extends JFrame
 			SetStatus (sFN + " launching about box") ;
 			
 			s = "" ;
-			s += "Program to clone project source directories." ;
+			s += "Program to send SMTP channel check." ;
 			ProgUtils.MsgBox(s, m_Frame);
 			
 			SetStatus (m_sStatusDefault) ;
@@ -482,8 +498,26 @@ public class JSMTP_ChannelCheck_AppWin extends JFrame
 				ForceListRefresh () ;
 			}
 		}
+		
+		//////////////////////////////
+		//
+		public class MyLogger extends AppLogger
+		{
+			void Log (String sLog)
+			{
+				DateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
+				Date date = new Date();
+				String sDate = dateFormat.format(date);
+				
+				String sFullLog = sDate + " " + sLog ;
+				
+				m_Logs.Log (sFullLog) ;
+			}
+		}
+		
 		void Log (String sLog)
 		{
+			/*
 			DateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
 			Date date = new Date();
 			String sDate = dateFormat.format(date);
@@ -491,6 +525,8 @@ public class JSMTP_ChannelCheck_AppWin extends JFrame
 			String sFullLog = sDate + " " + sLog ;
 			
 			m_Logs.Log (sFullLog) ;
+			*/
+			m_MyLogger.Log(sLog);
 		}
 		void SetStatus (String sStatus)
 		{

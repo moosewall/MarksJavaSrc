@@ -1,0 +1,22 @@
+Feb 06, 2015 4:56:44 PM AppLog Log
+INFO: initialize initialized
+Feb 06, 2015 6:35:51 PM AppLog Log
+INFO: initialize initialized
+Feb 06, 2015 6:36:06 PM AppLog Log
+INFO: initialize initialized
+Feb 06, 2015 6:37:33 PM AppLog Log
+INFO: initialize initialized
+Feb 06, 2015 6:46:21 PM AppLog Log
+INFO: initialize initialized
+Feb 06, 2015 6:49:28 PM AppLog Log
+INFO: initialize initialized
+Feb 06, 2015 7:24:32 PM AppLog Log
+INFO: initialize initialized
+Feb 06, 2015 7:26:29 PM AppLog Log
+INFO: initialize initialized
+Feb 07, 2015 8:27:05 AM AppLog Log
+INFO: initialize initialized
+Feb 07, 2015 8:30:05 AM AppLog Log
+INFO: initialize initialized
+Feb 07, 2015 8:31:19 AM AppLog Log
+INFO: initialize initialized

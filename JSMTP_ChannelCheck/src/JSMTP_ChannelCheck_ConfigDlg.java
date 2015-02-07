@@ -112,15 +112,13 @@ public class JSMTP_ChannelCheck_ConfigDlg extends JDialog
 		tfSmtpServer.setText(this.m_sSmtpServer);
 		textFromAddress.setText(this.m_sFromAddress);
 		this.textToAddress.setText(this.m_sToAddress);
-		this.textDurationMinutes.setText(Integer.toString(m_iDurationMins));
 	}
 	public void ControlsToData ()
 	{
 		m_sSmtpServer = tfSmtpServer.getText();
 		this.m_sFromAddress = textFromAddress.getText();
 		this.m_sToAddress = this.textToAddress.getText();
-		
-		m_iDurationMins = Integer.parseInt(textDurationMinutes.getText());
+	
 	}
 	public String sCheckData ()
 	{
@@ -157,9 +155,11 @@ public class JSMTP_ChannelCheck_ConfigDlg extends JDialog
 	private JTextField textToAddress;
 	public String m_sToAddress = "m.sw2005@gmail.com" ;
 	private JTextField textDurationMinutes;
-	public int m_iDurationMins = 60 ;
+	
 	private JPasswordField pfPassword;
 	public String m_sPassword = "" ;
+	
+	private JLabel lblSmtpServer ;
 
 	/**
 	 * Create the dialog.
@@ -173,7 +173,7 @@ public class JSMTP_ChannelCheck_ConfigDlg extends JDialog
 		getContentPane().add(contentPanel, BorderLayout.CENTER);
 		contentPanel.setLayout(null);
 		
-		JLabel lblSmtpServer = new JLabel("SMTP Server:");
+		lblSmtpServer = new JLabel("SMTP Server:");
 		lblSmtpServer.setBounds(10, 41, 91, 14);
 		contentPanel.add(lblSmtpServer);
 		
